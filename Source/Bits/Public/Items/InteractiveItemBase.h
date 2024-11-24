@@ -21,6 +21,8 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
+	void Outline(bool bEnable);
+
 protected:
 	/* 交互物体与交互键的碰撞体 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -1,36 +1,73 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Components/Player/InteractionManagerComponent.h"
 
+#include "Items/InteractiveItemBase.h"
 
-// Sets default values for this component's properties
+
 UInteractionManagerComponent::UInteractionManagerComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
+bool UInteractionManagerComponent::CanInteract()
+{
+	return InteractiveItem != nullptr;
+}
 
-// Called when the game starts
 void UInteractionManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-	
+	GetWorld()->GetTimerManager().SetTimer(InteractCheckTimer,
+	                                       this,
+	                                       &ThisClass::CheckInteraction, InteractionCheckTime,
+	                                       false);
 }
 
-
-// Called every frame
-void UInteractionManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                        FActorComponentTickFunction* ThisTickFunction)
+void UInteractionManagerComponent::CheckInteraction()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (InteractiveItem)
+	{
+		InteractiveItem->Outline(false);
+		InteractiveItem = nullptr;
+	}
 
-	// ...
+	if (AllowInteraction())
+	{
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (PlayerController)
+		{
+			FVector CameraLocation;
+			FRotator CameraRotation;
+			PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+			FVector Start = CameraLocation;
+			FVector End = Start + (CameraRotation.Vector() * MaxRayDistance);
+
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(GetOwner());
+
+			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, Params))
+			{
+				AActor* HitActor = HitResult.GetActor();
+				if (HitActor)
+				{
+					InteractiveItem = Cast<AInteractiveItemBase>(HitActor);
+					if (InteractiveItem)
+					{
+						InteractiveItem->Outline(true);
+					}
+				}
+			}
+		}
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(InteractCheckTimer,
+	                                       this,
+	                                       &ThisClass::CheckInteraction, InteractionCheckTime,
+	                                       false);
 }
 
+bool UInteractionManagerComponent::AllowInteraction()
+{
+	return bAllowInteraction;
+}

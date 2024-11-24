@@ -25,3 +25,8 @@ void AInteractiveItemBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+void AInteractiveItemBase::Outline(bool bEnable)
+{
+	Mesh->SetRenderCustomDepth(bEnable);
+}

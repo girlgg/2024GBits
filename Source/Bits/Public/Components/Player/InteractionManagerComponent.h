@@ -7,21 +7,36 @@
 #include "InteractionManagerComponent.generated.h"
 
 
+class AInteractiveItemBase;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BITS_API UInteractionManagerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	UInteractionManagerComponent();
 
+	bool CanInteract();
+
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+	void CheckInteraction();
+	UFUNCTION(BlueprintCallable)
+	virtual bool AllowInteraction();
+
+	UPROPERTY(EditDefaultsOnly)
+	float InteractionCheckTime{.1f};
+	UPROPERTY(EditDefaultsOnly)
+	float MaxRayDistance{300.f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAllowInteraction{true};
+
+	UPROPERTY(BlueprintReadOnly)
+	AInteractiveItemBase* InteractiveItem;
+
+private:
+	FTimerHandle InteractCheckTimer;
 };
