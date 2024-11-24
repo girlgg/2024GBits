@@ -14,6 +14,12 @@ AInteractiveItemBase::AInteractiveItemBase()
 	InteractionWidgetComponent =
 		CreateDefaultSubobject<UInteractionWidgetComponent>(TEXT("InteractionWidgetComponent"));
 	InteractionWidgetComponent->SetupAttachment(SphereCollision);
+
+	SphereCollision->SetSphereRadius(CustomCollisionRadius);
+	if (IsValid(InteractiveData.ObjectMesh))
+	{
+		Mesh->SetStaticMesh(InteractiveData.ObjectMesh);
+	}
 }
 
 void AInteractiveItemBase::BeginPlay()
