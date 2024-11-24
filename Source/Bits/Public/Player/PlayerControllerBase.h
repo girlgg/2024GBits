@@ -11,6 +11,8 @@ class BITS_API APlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	APlayerControllerBase();
+	
 	//~ Actor interface
 	virtual void BeginPlay() override;
 	//~ End of Actor interface
