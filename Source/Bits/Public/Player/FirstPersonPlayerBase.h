@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "FirstPersonPlayerBase.generated.h"
 
+class UInputMappingContext;
 class UCameraManagerComponent;
 class UInventoryManagerComponent;
 class UInteractionManagerComponent;
@@ -34,9 +35,18 @@ protected:
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	void Interact(const FInputActionValue& Value);
+	void Back(const FInputActionValue& Value);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
 	UInputAction* LookAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
 	UInputAction* MoveAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
+	UInputAction* InteractAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
+	UInputAction* BackAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	UInputMappingContext* FirstPersonInputMapping;
 };

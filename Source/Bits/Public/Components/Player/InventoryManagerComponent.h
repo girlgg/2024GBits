@@ -1,11 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Items/InteractiveItemBase.h"
 #include "InventoryManagerComponent.generated.h"
 
+class UInventoryHUDBase;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BITS_API UInventoryManagerComponent : public UActorComponent
@@ -13,15 +13,22 @@ class BITS_API UInventoryManagerComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	UInventoryManagerComponent();
 
+	void AddItemToInventory(FInteractiveData& InInteractiveData, class AInteractiveItemBase* PendingKill);
+
+	bool FindItemByName(FString& InName);
+	void ReduceItemByNme(FString& InName);
+
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UInventoryHUDBase> InventoryHUDClass{nullptr};
+	UPROPERTY(BlueprintReadOnly)
+	UInventoryHUDBase* InventoryHUD{nullptr};
+
+	/* 物体描述 | 个数 */
+	UPROPERTY(BlueprintReadOnly)
+	TMap<FInteractiveData, int32> InventoryItems;
 };

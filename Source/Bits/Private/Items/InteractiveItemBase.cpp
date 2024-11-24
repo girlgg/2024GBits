@@ -2,6 +2,7 @@
 
 #include "Components/SphereComponent.h"
 #include "Components/Items/InteractionWidgetComponent.h"
+#include "HUD/ItemInteractionHUDBase.h"
 
 AInteractiveItemBase::AInteractiveItemBase()
 {
@@ -9,6 +10,9 @@ AInteractiveItemBase::AInteractiveItemBase()
 
 	SphereCollision = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision"));
 	SetRootComponent(SphereCollision);
+	UICollision = CreateDefaultSubobject<USphereComponent>(TEXT("UICollision"));
+	UICollision->SetupAttachment(SphereCollision);
+
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	Mesh->SetupAttachment(SphereCollision);
 	InteractionWidgetComponent =
@@ -20,11 +24,21 @@ AInteractiveItemBase::AInteractiveItemBase()
 	{
 		Mesh->SetStaticMesh(InteractiveData.ObjectMesh);
 	}
+
+	UICollision->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnPlayerInUI);
+	UICollision->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnPlayerOutUI);
+}
+
+void AInteractiveItemBase::PlayerHasItem()
+{
+	Mesh->AddRelativeLocation(FVector(0, 10, 0));
 }
 
 void AInteractiveItemBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UICollision->SetSphereRadius(InteractiveData.DisplayPromptFromRange);
 }
 
 void AInteractiveItemBase::Tick(float DeltaTime)
@@ -35,4 +49,17 @@ void AInteractiveItemBase::Tick(float DeltaTime)
 void AInteractiveItemBase::Outline(bool bEnable)
 {
 	Mesh->SetRenderCustomDepth(bEnable);
+}
+
+void AInteractiveItemBase::OnPlayerInUI(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                        const FHitResult& SweepResult)
+{
+	InteractionWidgetComponent->CurrentWidget->SetRenderOpacity(.85f);
+}
+
+void AInteractiveItemBase::OnPlayerOutUI(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	InteractionWidgetComponent->CurrentWidget->SetRenderOpacity(.0f);
 }

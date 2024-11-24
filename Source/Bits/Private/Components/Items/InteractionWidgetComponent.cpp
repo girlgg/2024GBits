@@ -6,7 +6,6 @@
 
 UInteractionWidgetComponent::UInteractionWidgetComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
 }
 
 
@@ -14,18 +13,15 @@ void UInteractionWidgetComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UItemInteractionHUDBase* HUD = Cast<UItemInteractionHUDBase>(GetUserWidgetObject());
-	AInteractiveItemBase* Item = Cast<AInteractiveItemBase>(GetOwner());
-
-	DisplayFromRange = Item->InteractiveData.DisplayPromptFromRange;
-	HUD->UpdateInputInteractionData(Item->InteractiveData);
-	SetRelativeLocation(Item->InteractiveData.InteractionPromptOffset);
+	CurrentWidget = Cast<UItemInteractionHUDBase>(GetUserWidgetObject());
+	if (AInteractiveItemBase* Item = Cast<AInteractiveItemBase>(GetOwner()))
+	{
+		DisplayFromRange = Item->InteractiveData.DisplayPromptFromRange;
+		if (CurrentWidget)
+		{
+			CurrentWidget->UpdateInputInteractionData(Item->InteractiveData);
+			CurrentWidget->SetRenderOpacity(0.f);
+		}
+		SetRelativeLocation(Item->InteractiveData.InteractionPromptOffset);
+	}
 }
-
-
-void UInteractionWidgetComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                                FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-

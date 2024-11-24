@@ -12,8 +12,6 @@ class BITS_API UCameraManagerComponent : public UActorComponent
 
 public:
 	UCameraManagerComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	virtual void BeginPlay() override;

@@ -1,36 +1,64 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Components/Player/InventoryManagerComponent.h"
 
+#include "Blueprint/UserWidget.h"
+#include "HUD/InventoryHUDBase.h"
 
-// Sets default values for this component's properties
 UInventoryManagerComponent::UInventoryManagerComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
+void UInventoryManagerComponent::AddItemToInventory(FInteractiveData& InInteractiveData,
+                                                    AInteractiveItemBase* PendingKill)
+{
+	auto& Item = InventoryItems.FindOrAdd(InInteractiveData);
+	++Item;
+	if (IsValid(PendingKill))
+	{
+		PendingKill->Destroy();
+	}
+}
 
-// Called when the game starts
+bool UInventoryManagerComponent::FindItemByName(FString& InName)
+{
+	for (auto& Item : InventoryItems)
+	{
+		if (Item.Key.ObjectName == InName && Item.Value > 0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void UInventoryManagerComponent::ReduceItemByNme(FString& InName)
+{
+	for (auto& Item : InventoryItems)
+	{
+		if (Item.Key.ObjectName == InName)
+		{
+			--Item.Value;
+		}
+	}
+}
+
 void UInventoryManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-	
+	if (IsValid(InventoryHUDClass))
+	{
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (PlayerController)
+		{
+			InventoryHUD = CreateWidget<UInventoryHUDBase>(PlayerController, InventoryHUDClass);
+			if (InventoryHUD)
+			{
+				InventoryHUD->AddToViewport();
+
+				FInputModeGameOnly InputMode;
+				PlayerController->SetInputMode(InputMode);
+				PlayerController->bShowMouseCursor = false;
+			}
+		}
+	}
 }
-
-
-// Called every frame
-void UInventoryManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                      FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-

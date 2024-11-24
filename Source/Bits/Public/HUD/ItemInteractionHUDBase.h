@@ -9,8 +9,13 @@ UCLASS()
 class BITS_API UItemInteractionHUDBase : public UUserWidget
 {
 	GENERATED_BODY()
+
 public:
 	void UpdateInputInteractionData(FInteractiveData& InInteractiveData);
+
 protected:
+	UPROPERTY(BlueprintReadWrite)
 	FInteractiveData InteractiveData;
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* PromptText;
 };
