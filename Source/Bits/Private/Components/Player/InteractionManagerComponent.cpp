@@ -144,7 +144,7 @@ void UInteractionManagerComponent::HasItemInteraction()
 			InteractiveItem->PlayerHasItem();
 			if (InteractiveItem->InteractiveData.InteractionMethod.ConsumeItem)
 			{
-				GetPlayer()->InventoryManager->ReduceItemByNme(NeedItemName);
+				GetPlayer()->InventoryManager->ReduceItemByName(NeedItemName);
 			}
 		}
 	}

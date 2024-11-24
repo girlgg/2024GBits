@@ -30,7 +30,7 @@ bool UInventoryManagerComponent::FindItemByName(FString& InName)
 	return false;
 }
 
-void UInventoryManagerComponent::ReduceItemByNme(FString& InName)
+void UInventoryManagerComponent::ReduceItemByName(FString& InName)
 {
 	for (auto& Item : InventoryItems)
 	{

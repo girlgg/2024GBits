@@ -18,7 +18,7 @@ public:
 	void AddItemToInventory(FInteractiveData& InInteractiveData, class AInteractiveItemBase* PendingKill);
 
 	bool FindItemByName(FString& InName);
-	void ReduceItemByNme(FString& InName);
+	void ReduceItemByName(FString& InName);
 
 protected:
 	virtual void BeginPlay() override;
