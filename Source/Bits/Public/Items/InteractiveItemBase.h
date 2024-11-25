@@ -15,6 +15,9 @@ enum class EInteractionMethod : uint8
 	Pickup,
 	Inspect,
 	HasItem,
+	ExecFun,
+	ExecFunWithItem,
+	IntoDream,
 	Max
 };
 
@@ -145,6 +148,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void Outline(bool bEnable);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void InteractionExecFunc();
 
 protected:
 	UFUNCTION()

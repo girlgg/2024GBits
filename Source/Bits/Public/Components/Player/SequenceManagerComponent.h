@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "SequenceManagerComponent.generated.h"
 
+struct FSubtitleSetting;
+class USequenceHUDBase;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BITS_API USequenceManagerComponent : public UActorComponent
@@ -13,10 +15,14 @@ class BITS_API USequenceManagerComponent : public UActorComponent
 public:
 	USequenceManagerComponent();
 
+	UFUNCTION(BlueprintCallable)
+	void PlaySubtitles(const TArray<FSubtitleSetting>& Subtitles);
+
 protected:
 	virtual void BeginPlay() override;
 
-public:
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<USequenceHUDBase> SequenceHUDClass;
+	UPROPERTY(Transient)
+	USequenceHUDBase* SequenceHUD;
 };

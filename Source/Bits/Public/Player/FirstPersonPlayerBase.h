@@ -22,12 +22,16 @@ class BITS_API AFirstPersonPlayerBase : public ACharacter
 public:
 	AFirstPersonPlayerBase();
 
+	void StartGame();
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(Exec)
 	void ChangeViewMode(EViewMode NewViewMode);
+
+	void IntoDream();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCameraManagerComponent* CameraManager;

@@ -37,7 +37,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual bool AllowInteraction();
 	void InspectUI();
-	void HasItemInteraction();
+	bool HasItemInteraction();
+
+	void IntoDream();
 
 	AFirstPersonPlayerBase* GetPlayer();
 

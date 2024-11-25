@@ -8,6 +8,8 @@
 #include "Components/Player/SequenceManagerComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUD/PauseMenuHUDBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/LevelGameModeBase.h"
 
 AFirstPersonPlayerBase::AFirstPersonPlayerBase()
 {
@@ -17,6 +19,11 @@ AFirstPersonPlayerBase::AFirstPersonPlayerBase()
 	InteractionManager = CreateDefaultSubobject<UInteractionManagerComponent>(TEXT("InteractionManager"));
 	InventoryManager = CreateDefaultSubobject<UInventoryManagerComponent>(TEXT("InventoryManager"));
 	SequenceManager = CreateDefaultSubobject<USequenceManagerComponent>(TEXT("SequenceManager"));
+}
+
+void AFirstPersonPlayerBase::StartGame()
+{
+	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
 }
 
 void AFirstPersonPlayerBase::BeginPlay()
@@ -115,7 +122,7 @@ void AFirstPersonPlayerBase::ChangeToThirdPerson()
 	{
 		MovementComponent->GravityScale = 0.f;
 	}
-	SetActorLocation(FVector(0, 0, 500));
+	SetActorLocation(FVector(0, 0, 800));
 	if (GetController())
 	{
 		GetController()->SetControlRotation(FRotator(-90, 0, 0));
@@ -124,7 +131,7 @@ void AFirstPersonPlayerBase::ChangeToThirdPerson()
 	if (APlayerController* PC = GetController<APlayerController>())
 	{
 		PC->bShowMouseCursor = true;
-		
+
 		FInputModeGameAndUI InputMode;
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PC->SetInputMode(InputMode);
@@ -169,5 +176,15 @@ void AFirstPersonPlayerBase::ChangeViewMode(EViewMode NewViewMode)
 		break;
 	case EViewMode::Max:
 		break;
+	}
+}
+
+void AFirstPersonPlayerBase::IntoDream()
+{
+	ChangeViewMode(EViewMode::ThirdPerson);
+
+	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
+	{
+		GM->StopTime();
 	}
 }

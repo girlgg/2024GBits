@@ -11,13 +11,4 @@ APlayerControllerBase::APlayerControllerBase()
 void APlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		if (InputMappingContext)
-		{
-			Subsystem->AddMappingContext(InputMappingContext, 0);
-		}
-	}
 }

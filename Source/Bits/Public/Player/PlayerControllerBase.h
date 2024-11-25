@@ -16,8 +16,4 @@ public:
 	//~ Actor interface
 	virtual void BeginPlay() override;
 	//~ End of Actor interface
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputMappingContext* InputMappingContext;
 };

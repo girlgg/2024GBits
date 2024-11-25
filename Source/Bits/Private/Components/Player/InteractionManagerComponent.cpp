@@ -40,6 +40,19 @@ void UInteractionManagerComponent::RootInteraction()
 	case EInteractionMethod::HasItem:
 		HasItemInteraction();
 		break;
+	case EInteractionMethod::ExecFun:
+		InteractiveItem->InteractionExecFunc();
+		break;
+	case EInteractionMethod::ExecFunWithItem:
+		if (HasItemInteraction())
+		{
+			InteractiveItem->InteractionExecFunc();
+		}
+		break;
+	case EInteractionMethod::IntoDream:
+		IntoDream();
+		InteractiveItem->InteractionExecFunc();
+		break;
 	case EInteractionMethod::Max:
 		break;
 	}
@@ -171,7 +184,7 @@ void UInteractionManagerComponent::InspectUI()
 	}
 }
 
-void UInteractionManagerComponent::HasItemInteraction()
+bool UInteractionManagerComponent::HasItemInteraction()
 {
 	if (GetPlayer())
 	{
@@ -183,7 +196,17 @@ void UInteractionManagerComponent::HasItemInteraction()
 			{
 				GetPlayer()->InventoryManager->ReduceItemByName(NeedItemName);
 			}
+			return true;
 		}
+	}
+	return false;
+}
+
+void UInteractionManagerComponent::IntoDream()
+{
+	if (GetPlayer())
+	{
+		GetPlayer()->IntoDream();
 	}
 }
 
