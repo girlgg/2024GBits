@@ -1,12 +1,29 @@
 #include "Player/CameraManagerBase.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Common/ViewMode.h"
 #include "HUD/GeneralHUDBase.h"
 
-ACameraManagerBase::ACameraManagerBase() {}
+ACameraManagerBase::ACameraManagerBase()
+{
+}
 
 void ACameraManagerBase::BeginPlay()
 {
+	CreateCameraHUD();
+}
+
+void ACameraManagerBase::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+}
+
+void ACameraManagerBase::CreateCameraHUD()
+{
+	if (GeneralHUD)
+	{
+		DestroyCameraHUD();
+	}
 	if (GeneralHUDClass)
 	{
 		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
@@ -23,4 +40,10 @@ void ACameraManagerBase::BeginPlay()
 			}
 		}
 	}
+}
+
+void ACameraManagerBase::DestroyCameraHUD()
+{
+	GeneralHUD->RemoveFromParent();
+	GeneralHUD = nullptr;
 }

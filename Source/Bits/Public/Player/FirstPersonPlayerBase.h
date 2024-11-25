@@ -1,9 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Common/ViewMode.h"
 #include "GameFramework/Character.h"
 #include "FirstPersonPlayerBase.generated.h"
 
+class UPauseMenuHUDBase;
+class USequenceManagerComponent;
 class UInputMappingContext;
 class UCameraManagerComponent;
 class UInventoryManagerComponent;
@@ -23,12 +26,17 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(Exec)
+	void ChangeViewMode(EViewMode NewViewMode);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCameraManagerComponent* CameraManager;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInteractionManagerComponent* InteractionManager;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInventoryManagerComponent* InventoryManager;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USequenceManagerComponent* SequenceManager;
 
 protected:
 	virtual void BeginPlay() override;
@@ -37,6 +45,10 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
 	void Back(const FInputActionValue& Value);
+	void Pause(const FInputActionValue& Value);
+
+	void ChangeToFirstPerson();
+	void ChangeToThirdPerson();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
 	UInputAction* LookAction;
@@ -46,7 +58,18 @@ protected:
 	UInputAction* InteractAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
 	UInputAction* BackAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
+	UInputAction* PauseAction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* FirstPersonInputMapping;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	UInputMappingContext* ThirdPersonInputMapping;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HUD")
+	TSubclassOf<UPauseMenuHUDBase> PauseMenuHUDClass;
+	UPROPERTY(BlueprintReadOnly, Category = "HUD", Transient)
+	UPauseMenuHUDBase* PauseMenuHUD;
+
+	UPROPERTY(BlueprintReadWrite)
+	EViewMode CurrentViewMode{EViewMode::FirstPerson};
 };

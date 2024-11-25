@@ -68,4 +68,7 @@ private:
 	AFirstPersonPlayerBase* CurrentPlayer{nullptr};
 
 	EInteractionState CurrentInspectState;
+
+public:
+	bool bUseMouseLocation{false};
 };

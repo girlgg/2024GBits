@@ -18,8 +18,8 @@ bool UInteractionManagerComponent::CanInteract()
 
 void UInteractionManagerComponent::RootInteraction()
 {
-	if(!CanInteract()) return;
-	
+	if (!CanInteract()) return;
+
 	FInteractiveData& TargetInteractiveData = InteractiveItem->InteractiveData;
 
 	switch (TargetInteractiveData.InteractionMethod.InteractionMethod)
@@ -71,41 +71,78 @@ void UInteractionManagerComponent::CheckInteraction()
 		InteractiveItem->Outline(false);
 		InteractiveItem = nullptr;
 	}
-
-	if (AllowInteraction())
+	if (bUseMouseLocation)
 	{
-		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-		if (PlayerController)
+		if (AllowInteraction())
 		{
-			FVector CameraLocation;
-			FRotator CameraRotation;
-			PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
-
-			FVector Start = CameraLocation;
-			FVector End = Start + (CameraRotation.Vector() * MaxRayDistance);
-
-			FHitResult HitResult;
-			FCollisionQueryParams Params;
-			Params.AddIgnoredActor(GetOwner());
-
-			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, Params))
+			APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+			if (PlayerController)
 			{
-				AActor* HitActor = HitResult.GetActor();
-				if (HitActor)
+				FVector CameraLocation;
+				FRotator CameraRotation;
+				PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+				FHitResult HitResult;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(GetOwner());
+
+				FVector2D MousePosition;
+				if (PlayerController->GetMousePosition(MousePosition.X, MousePosition.Y))
 				{
-					InteractiveItem = Cast<AInteractiveItemBase>(HitActor);
-					if (InteractiveItem)
+					if (PlayerController->GetHitResultAtScreenPosition(
+						MousePosition, ECC_GameTraceChannel1, Params, HitResult))
 					{
-						InteractiveItem->Outline(true);
+						AActor* HitActor = HitResult.GetActor();
+						if (HitActor)
+						{
+							InteractiveItem = Cast<AInteractiveItemBase>(HitActor);
+							if (InteractiveItem)
+							{
+								InteractiveItem->Outline(true);
+							}
+						}
 					}
 				}
 			}
 		}
 	}
+	else
+	{
+		if (AllowInteraction())
+		{
+			APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+			if (PlayerController)
+			{
+				FVector CameraLocation;
+				FRotator CameraRotation;
+				PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
+				FVector Start = CameraLocation;
+				FVector End = Start + (CameraRotation.Vector() * MaxRayDistance);
+
+				FHitResult HitResult;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(GetOwner());
+
+				if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, Params))
+				{
+					AActor* HitActor = HitResult.GetActor();
+					if (HitActor)
+					{
+						InteractiveItem = Cast<AInteractiveItemBase>(HitActor);
+						if (InteractiveItem)
+						{
+							InteractiveItem->Outline(true);
+						}
+					}
+				}
+			}
+		}
+	}
 	GetWorld()->GetTimerManager().SetTimer(InteractCheckTimer,
 	                                       this,
-	                                       &ThisClass::CheckInteraction, InteractionCheckTime,
+	                                       &ThisClass::CheckInteraction,
+	                                       InteractionCheckTime,
 	                                       false);
 }
 

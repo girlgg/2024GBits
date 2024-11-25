@@ -4,6 +4,7 @@
 #include "Camera/PlayerCameraManager.h"
 #include "CameraManagerBase.generated.h"
 
+enum class EViewMode : uint8;
 class UGeneralHUDBase;
 
 UCLASS()
@@ -14,6 +15,10 @@ class BITS_API ACameraManagerBase : public APlayerCameraManager
 public:
 	ACameraManagerBase();
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+
+	void CreateCameraHUD();
+	void DestroyCameraHUD();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = UI)

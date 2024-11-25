@@ -5,6 +5,9 @@
 #include "Components/Player/CameraManagerComponent.h"
 #include "Components/Player/InteractionManagerComponent.h"
 #include "Components/Player/InventoryManagerComponent.h"
+#include "Components/Player/SequenceManagerComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "HUD/PauseMenuHUDBase.h"
 
 AFirstPersonPlayerBase::AFirstPersonPlayerBase()
 {
@@ -13,6 +16,7 @@ AFirstPersonPlayerBase::AFirstPersonPlayerBase()
 	CameraManager = CreateDefaultSubobject<UCameraManagerComponent>(TEXT("CameraManager"));
 	InteractionManager = CreateDefaultSubobject<UInteractionManagerComponent>(TEXT("InteractionManager"));
 	InventoryManager = CreateDefaultSubobject<UInventoryManagerComponent>(TEXT("InventoryManager"));
+	SequenceManager = CreateDefaultSubobject<USequenceManagerComponent>(TEXT("SequenceManager"));
 }
 
 void AFirstPersonPlayerBase::BeginPlay()
@@ -53,6 +57,83 @@ void AFirstPersonPlayerBase::Back(const FInputActionValue& Value)
 	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
 }
 
+void AFirstPersonPlayerBase::Pause(const FInputActionValue& Value)
+{
+	if (IsValid(PauseMenuHUD))
+	{
+		PauseMenuHUD->RemoveFromParent();
+		PauseMenuHUD = nullptr;
+	}
+	else if (IsValid(PauseMenuHUDClass))
+	{
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+		{
+			PauseMenuHUD = CreateWidget<UPauseMenuHUDBase>(PlayerController, PauseMenuHUDClass);
+			if (PauseMenuHUD)
+			{
+				PauseMenuHUD->AddToViewport();
+
+				FInputModeUIOnly InputMode;
+				PlayerController->SetInputMode(InputMode);
+				PlayerController->bShowMouseCursor = true;
+			}
+		}
+	}
+}
+
+void AFirstPersonPlayerBase::ChangeToFirstPerson()
+{
+	if (CurrentViewMode != EViewMode::FirstPerson)
+	{
+		return;
+	}
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->GravityScale = 1.f;
+	}
+	SetActorLocation(FVector(100, 100, 20));
+
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		PC->bShowMouseCursor = false;
+
+		FInputModeGameOnly InputMode;
+		PC->SetInputMode(InputMode);
+	}
+	InteractionManager->bUseMouseLocation = false;
+	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
+	CameraManager->CreateCameraHUD();
+}
+
+void AFirstPersonPlayerBase::ChangeToThirdPerson()
+{
+	if (CurrentViewMode != EViewMode::ThirdPerson)
+	{
+		return;
+	}
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->GravityScale = 0.f;
+	}
+	SetActorLocation(FVector(0, 0, 500));
+	if (GetController())
+	{
+		GetController()->SetControlRotation(FRotator(-90, 0, 0));
+	}
+
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		PC->bShowMouseCursor = true;
+		
+		FInputModeGameAndUI InputMode;
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		PC->SetInputMode(InputMode);
+	}
+	InteractionManager->bUseMouseLocation = true;
+	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), ThirdPersonInputMapping);
+	CameraManager->DestroyCameraHUD();
+}
+
 void AFirstPersonPlayerBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -67,5 +148,26 @@ void AFirstPersonPlayerBase::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
 		EnhancedInputComponent->BindAction(BackAction, ETriggerEvent::Started, this, &ThisClass::Back);
+		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started, this, &ThisClass::Pause);
+	}
+}
+
+void AFirstPersonPlayerBase::ChangeViewMode(EViewMode NewViewMode)
+{
+	if (CurrentViewMode == NewViewMode)
+	{
+		return;
+	}
+	CurrentViewMode = NewViewMode;
+	switch (NewViewMode)
+	{
+	case EViewMode::FirstPerson:
+		ChangeToFirstPerson();
+		break;
+	case EViewMode::ThirdPerson:
+		ChangeToThirdPerson();
+		break;
+	case EViewMode::Max:
+		break;
 	}
 }
