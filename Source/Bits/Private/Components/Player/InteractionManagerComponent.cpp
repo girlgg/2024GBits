@@ -2,10 +2,10 @@
 
 #include "Common/GameplayFunctinos.h"
 #include "Components/Player/InventoryManagerComponent.h"
+#include "Components/Player/SequenceManagerComponent.h"
 #include "HUD/InspectHUDBase.h"
 #include "Items/InteractiveItemBase.h"
 #include "Player/FirstPersonPlayerBase.h"
-
 
 UInteractionManagerComponent::UInteractionManagerComponent()
 {
@@ -33,25 +33,31 @@ void UInteractionManagerComponent::RootInteraction()
 		}
 		break;
 	case EInteractionMethod::Inspect:
-		InspectUI();
-		UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), InspectMapping);
-		CurrentInspectState = EInteractionState::Inspecting;
+		switch (TargetInteractiveData.InteractionMethod.InspectMethod)
+		{
+		case EInspectMethod::None:
+			break;
+		case EInspectMethod::Readable:
+			InspectUI();
+			UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), InspectMapping);
+			CurrentInspectState = EInteractionState::Inspecting;
+			break;
+		case EInspectMethod::Say:
+			if (GetPlayer())
+			{
+				GetPlayer()->SequenceManager->PlaySubtitles(TargetInteractiveData.InteractionMethod.SayTextPages);
+			}
+			break;
+		case EInspectMethod::Max:
+			break;
+		}
 		break;
 	case EInteractionMethod::HasItem:
 		HasItemInteraction();
 		break;
-	case EInteractionMethod::ExecFun:
-		InteractiveItem->InteractionExecFunc();
-		break;
-	case EInteractionMethod::ExecFunWithItem:
-		if (HasItemInteraction())
-		{
-			InteractiveItem->InteractionExecFunc();
-		}
-		break;
 	case EInteractionMethod::IntoDream:
 		IntoDream();
-		InteractiveItem->InteractionExecFunc();
+		InteractiveItem->PlayerHasItem();
 		break;
 	case EInteractionMethod::Max:
 		break;
@@ -189,14 +195,21 @@ bool UInteractionManagerComponent::HasItemInteraction()
 	if (GetPlayer())
 	{
 		FString NeedItemName = InteractiveItem->InteractiveData.InteractionMethod.InventoryItemName;
-		if (GetPlayer()->InventoryManager->FindItemByName(NeedItemName))
+		if (NeedItemName == TEXT("None") || NeedItemName.IsEmpty())
 		{
 			InteractiveItem->PlayerHasItem();
-			if (InteractiveItem->InteractiveData.InteractionMethod.ConsumeItem)
+		}
+		else
+		{
+			if (GetPlayer()->InventoryManager->FindItemByName(NeedItemName))
 			{
-				GetPlayer()->InventoryManager->ReduceItemByName(NeedItemName);
+				InteractiveItem->PlayerHasItem();
+				if (InteractiveItem->InteractiveData.InteractionMethod.ConsumeItem)
+				{
+					GetPlayer()->InventoryManager->ReduceItemByName(NeedItemName);
+				}
+				return true;
 			}
-			return true;
 		}
 	}
 	return false;

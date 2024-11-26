@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Common/SubtitleSetting.h"
 #include "InteractiveItemBase.generated.h"
 
 class UTextBlock;
@@ -15,8 +16,6 @@ enum class EInteractionMethod : uint8
 	Pickup,
 	Inspect,
 	HasItem,
-	ExecFun,
-	ExecFunWithItem,
 	IntoDream,
 	Max
 };
@@ -26,6 +25,7 @@ enum class EInspectMethod : uint8
 {
 	None,
 	Readable,
+	Say,
 	Max
 };
 
@@ -43,7 +43,7 @@ struct FInteractionMethods
 
 	/* 背包里的图标 被拾取的物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTextBlock* InventoryIcon;
+	UTexture2D* InventoryIcon;
 
 	/* 需要的背包里有的物品的名字 需要解锁的物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -58,33 +58,10 @@ struct FInteractionMethods
 	/* 可读的每一页的文字 可检视-可读 物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FString> ReadableTextPages;
-
-	bool operator==(const FInteractionMethods& Other) const
-	{
-		return InteractionMethod == Other.InteractionMethod &&
-			PromptText == Other.PromptText &&
-			InventoryIcon == Other.InventoryIcon &&
-			InventoryItemName == Other.InventoryItemName &&
-			ConsumeItem == Other.ConsumeItem &&
-			InspectMethod == Other.InspectMethod &&
-			ReadableTextPages == Other.ReadableTextPages;
-	}
+	/* 说话的每一句的文字 可检视-说话 物品专用 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FSubtitleSetting> SayTextPages;
 };
-
-FORCEINLINE uint32 GetTypeHash(const FInteractionMethods& Methods)
-{
-	uint32 Hash = GetTypeHash(static_cast<uint8>(Methods.InteractionMethod));
-	Hash = HashCombine(Hash, GetTypeHash(Methods.PromptText));
-	Hash = HashCombine(Hash, PointerHash(Methods.InventoryIcon));
-	Hash = HashCombine(Hash, GetTypeHash(Methods.InventoryItemName));
-	Hash = HashCombine(Hash, GetTypeHash(Methods.ConsumeItem));
-	Hash = HashCombine(Hash, GetTypeHash(static_cast<uint8>(Methods.InspectMethod)));
-	for (const auto& Page : Methods.ReadableTextPages)
-	{
-		Hash = HashCombine(Hash, GetTypeHash(Page));
-	}
-	return Hash;
-}
 
 USTRUCT(BlueprintType)
 struct FInteractiveData
@@ -107,21 +84,13 @@ struct FInteractiveData
 
 	bool operator==(const FInteractiveData& Other) const
 	{
-		return ObjectName == Other.ObjectName &&
-			ObjectMesh == Other.ObjectMesh &&
-			FMath::IsNearlyEqual(DisplayPromptFromRange, Other.DisplayPromptFromRange) &&
-			InteractionPromptOffset == Other.InteractionPromptOffset &&
-			InteractionMethod == Other.InteractionMethod;
+		return ObjectName == Other.ObjectName;
 	}
 };
 
 FORCEINLINE uint32 GetTypeHash(const FInteractiveData& Data)
 {
 	uint32 Hash = GetTypeHash(Data.ObjectName);
-	Hash = HashCombine(Hash, PointerHash(Data.ObjectMesh));
-	Hash = HashCombine(Hash, GetTypeHash(Data.DisplayPromptFromRange));
-	Hash = HashCombine(Hash, GetTypeHash(Data.InteractionPromptOffset));
-	Hash = HashCombine(Hash, GetTypeHash(Data.InteractionMethod));
 	return Hash;
 }
 
@@ -133,8 +102,8 @@ class BITS_API AInteractiveItemBase : public AActor
 public:
 	AInteractiveItemBase();
 
-	UFUNCTION(BlueprintCallable)
-	virtual void PlayerHasItem();
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayerHasItem();
 
 protected:
 	virtual void BeginPlay() override;
@@ -148,9 +117,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void Outline(bool bEnable);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void InteractionExecFunc();
 
 protected:
 	UFUNCTION()

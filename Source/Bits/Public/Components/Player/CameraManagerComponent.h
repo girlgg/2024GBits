@@ -15,6 +15,7 @@ class BITS_API UCameraManagerComponent : public UActorComponent
 
 public:
 	UCameraManagerComponent();
+	void StartGame();
 
 	void CreateCameraHUD();
 	void DestroyCameraHUD();

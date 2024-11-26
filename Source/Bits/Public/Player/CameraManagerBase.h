@@ -15,6 +15,7 @@ class BITS_API ACameraManagerBase : public APlayerCameraManager
 public:
 	ACameraManagerBase();
 	virtual void BeginPlay() override;
+	void StartGame();
 	virtual void Tick(float DeltaSeconds) override;
 
 	void CreateCameraHUD();

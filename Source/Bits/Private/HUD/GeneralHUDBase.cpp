@@ -18,11 +18,11 @@ void UGeneralHUDBase::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 			{
 				if (bCanInteract)
 				{
-					PlayAnimation(CanInteractCursorAnim, 0, 1, EUMGSequencePlayMode::Forward, 1.5f);
+					PlayAnimation(CanInteractCursorAnim, 0, 1, EUMGSequencePlayMode::Forward, 3.f);
 				}
 				else
 				{
-					PlayAnimation(CanInteractCursorAnim, 0, 1, EUMGSequencePlayMode::Reverse, 1.5f);
+					PlayAnimation(CanInteractCursorAnim, 0, 1, EUMGSequencePlayMode::Reverse, 3.f);
 				}
 				bLastCanInteract = bCanInteract;
 			}

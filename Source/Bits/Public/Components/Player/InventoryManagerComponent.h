@@ -14,6 +14,7 @@ class BITS_API UInventoryManagerComponent : public UActorComponent
 
 public:
 	UInventoryManagerComponent();
+	void CreateHUD();
 
 	void AddItemToInventory(FInteractiveData& InInteractiveData, class AInteractiveItemBase* PendingKill);
 
@@ -22,12 +23,14 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void StartGame();
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UInventoryHUDBase> InventoryHUDClass{nullptr};
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UInventoryHUDBase> InventoryHUDClass;
 	UPROPERTY(BlueprintReadOnly)
 	UInventoryHUDBase* InventoryHUD{nullptr};
 
+public:
 	/* 物体描述 | 个数 */
 	UPROPERTY(BlueprintReadOnly)
 	TMap<FInteractiveData, int32> InventoryItems;

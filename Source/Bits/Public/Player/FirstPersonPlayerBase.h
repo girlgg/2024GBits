@@ -33,14 +33,14 @@ public:
 
 	void IntoDream();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UCameraManagerComponent* CameraManager;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UInteractionManagerComponent* InteractionManager;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UInventoryManagerComponent* InventoryManager;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USequenceManagerComponent* SequenceManager;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UCameraManagerComponent> CameraManager;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UInteractionManagerComponent> InteractionManager;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UInventoryManagerComponent> InventoryManager;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<USequenceManagerComponent> SequenceManager;
 
 protected:
 	virtual void BeginPlay() override;

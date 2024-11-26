@@ -24,6 +24,7 @@ AFirstPersonPlayerBase::AFirstPersonPlayerBase()
 void AFirstPersonPlayerBase::StartGame()
 {
 	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
+	CameraManager->StartGame();
 }
 
 void AFirstPersonPlayerBase::BeginPlay()

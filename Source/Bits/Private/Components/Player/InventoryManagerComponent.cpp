@@ -16,6 +16,14 @@ void UInventoryManagerComponent::AddItemToInventory(FInteractiveData& InInteract
 	{
 		PendingKill->Destroy();
 	}
+	if (!IsValid(InventoryHUD))
+	{
+		CreateHUD();
+	}
+	if (IsValid(InventoryHUD))
+	{
+		InventoryHUD->UpdateItem(InInteractiveData.ObjectName, InInteractiveData.InteractionMethod.InventoryIcon, Item);
+	}
 }
 
 bool UInventoryManagerComponent::FindItemByName(FString& InName)
@@ -37,6 +45,14 @@ void UInventoryManagerComponent::ReduceItemByName(FString& InName)
 		if (Item.Key.ObjectName == InName)
 		{
 			--Item.Value;
+			if (!IsValid(InventoryHUD))
+			{
+				CreateHUD();
+			}
+			if (IsValid(InventoryHUD))
+			{
+				InventoryHUD->UpdateItem(Item.Key.ObjectName, Item.Key.InteractionMethod.InventoryIcon, Item.Value);
+			}
 		}
 	}
 }
@@ -44,7 +60,15 @@ void UInventoryManagerComponent::ReduceItemByName(FString& InName)
 void UInventoryManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
+void UInventoryManagerComponent::StartGame()
+{
+	CreateHUD();
+}
+
+void UInventoryManagerComponent::CreateHUD()
+{
 	if (IsValid(InventoryHUDClass))
 	{
 		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();

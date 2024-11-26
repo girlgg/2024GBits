@@ -29,11 +29,6 @@ AInteractiveItemBase::AInteractiveItemBase()
 	UICollision->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnPlayerOutUI);
 }
 
-void AInteractiveItemBase::PlayerHasItem()
-{
-	Mesh->AddRelativeLocation(FVector(0, 10, 0));
-}
-
 void AInteractiveItemBase::BeginPlay()
 {
 	Super::BeginPlay();

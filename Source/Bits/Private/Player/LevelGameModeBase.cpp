@@ -40,7 +40,7 @@ void ALevelGameModeBase::BeginPlay()
 	}
 	else
 	{
-		StartGame();
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::StartGame);
 	}
 }
 

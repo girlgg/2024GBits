@@ -27,8 +27,10 @@ protected:
 
 	AFirstPersonPlayerBase* GetPlayer();
 
+	/* 倒计时HUD控件 */
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UCountdownHUDBase> CountdownWidgetClass;
+
 	UPROPERTY(Transient, BlueprintReadOnly)
 	UCountdownHUDBase* CountdownWidget;
 

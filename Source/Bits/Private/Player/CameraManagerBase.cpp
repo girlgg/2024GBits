@@ -10,6 +10,10 @@ ACameraManagerBase::ACameraManagerBase()
 
 void ACameraManagerBase::BeginPlay()
 {
+}
+
+void ACameraManagerBase::StartGame()
+{
 	CreateCameraHUD();
 }
 
