@@ -16,7 +16,7 @@ void UCountdownHUDBase::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (CurrentTime > 0)
+	if (CurrentTime > 0 && !bPause)
 	{
 		CurrentTime -= InDeltaTime;
 		float Progress = FMath::Clamp(CurrentTime / MaxTime, 0.f, 1.f);
@@ -31,4 +31,14 @@ void UCountdownHUDBase::SetTime(float InTime)
 {
 	MaxTime = InTime;
 	CurrentTime = MaxTime;
+}
+
+void UCountdownHUDBase::SetCurrentTime(float InTime)
+{
+	CurrentTime = InTime;
+}
+
+void UCountdownHUDBase::SetPause(bool bIsPause)
+{
+	bPause = bIsPause;
 }

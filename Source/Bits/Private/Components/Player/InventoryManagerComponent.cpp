@@ -11,10 +11,19 @@ void UInventoryManagerComponent::AddItemToInventory(FInteractiveData& InInteract
                                                     AInteractiveItemBase* PendingKill)
 {
 	auto& Item = InventoryItems.FindOrAdd(InInteractiveData);
+	if (Item >= InInteractiveData.InteractionMethod.MaxItemNum)
+	{
+		// TODO：触发拾取失败事件
+		return;
+	}
 	++Item;
 	if (IsValid(PendingKill))
 	{
 		PendingKill->Destroy();
+	}
+	if (!InInteractiveData.InteractionMethod.bShowInInventory)
+	{
+		return;
 	}
 	if (!IsValid(InventoryHUD))
 	{
@@ -45,6 +54,10 @@ void UInventoryManagerComponent::ReduceItemByName(FString& InName)
 		if (Item.Key.ObjectName == InName)
 		{
 			--Item.Value;
+			if (!Item.Key.InteractionMethod.bShowInInventory)
+			{
+				return;
+			}
 			if (!IsValid(InventoryHUD))
 			{
 				CreateHUD();
@@ -55,6 +68,10 @@ void UInventoryManagerComponent::ReduceItemByName(FString& InName)
 			}
 		}
 	}
+}
+
+void UInventoryManagerComponent::Navigate(float Direction)
+{
 }
 
 void UInventoryManagerComponent::BeginPlay()

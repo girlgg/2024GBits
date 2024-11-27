@@ -39,7 +39,8 @@ protected:
 	void InspectUI();
 	bool HasItemInteraction();
 
-	void IntoDream();
+	void IntoDream(float InDreamTime);
+	void OutDream();
 
 	AFirstPersonPlayerBase* GetPlayer();
 

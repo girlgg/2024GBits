@@ -3,6 +3,8 @@
 #include "Components/SphereComponent.h"
 #include "Components/Items/InteractionWidgetComponent.h"
 #include "HUD/ItemInteractionHUDBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/LevelGameModeBase.h"
 
 AInteractiveItemBase::AInteractiveItemBase()
 {
@@ -34,6 +36,30 @@ void AInteractiveItemBase::BeginPlay()
 	Super::BeginPlay();
 
 	UICollision->SetSphereRadius(InteractiveData.DisplayPromptFromRange);
+
+	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		GM->OnIntoDream.AddDynamic(this, &ThisClass::OnIntoDream);
+		GM->OnOutDream.AddDynamic(this, &ThisClass::OnOutDream);
+	}
+}
+
+void AInteractiveItemBase::OnIntoDream()
+{
+	if (IntoDreamMesh.IsValid())
+	{
+		Mesh->SetStaticMesh(IntoDreamMesh.LoadSynchronous());
+	}
+	K2_IntoDream();
+}
+
+void AInteractiveItemBase::OnOutDream()
+{
+	if (OutDreamMesh.IsValid())
+	{
+		Mesh->SetStaticMesh(OutDreamMesh.LoadSynchronous());
+	}
+	K2_OutDream();
 }
 
 void AInteractiveItemBase::Tick(float DeltaTime)

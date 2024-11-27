@@ -56,7 +56,11 @@ void UInteractionManagerComponent::RootInteraction()
 		HasItemInteraction();
 		break;
 	case EInteractionMethod::IntoDream:
-		IntoDream();
+		IntoDream(TargetInteractiveData.InteractionMethod.DreamGetTime);
+		InteractiveItem->PlayerHasItem();
+		break;
+	case EInteractionMethod::OutDream:
+		OutDream();
 		InteractiveItem->PlayerHasItem();
 		break;
 	case EInteractionMethod::Max:
@@ -215,11 +219,19 @@ bool UInteractionManagerComponent::HasItemInteraction()
 	return false;
 }
 
-void UInteractionManagerComponent::IntoDream()
+void UInteractionManagerComponent::IntoDream(float InDreamTime)
 {
 	if (GetPlayer())
 	{
-		GetPlayer()->IntoDream();
+		GetPlayer()->IntoDream(InDreamTime);
+	}
+}
+
+void UInteractionManagerComponent::OutDream()
+{
+	if (GetPlayer())
+	{
+		GetPlayer()->OutDream();
 	}
 }
 

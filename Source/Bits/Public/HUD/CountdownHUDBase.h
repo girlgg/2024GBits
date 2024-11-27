@@ -16,6 +16,8 @@ public:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	
 	void SetTime(float InTime);
+	void SetCurrentTime(float InTime);
+	void SetPause(bool bIsPause);
 
 	UPROPERTY(meta=(BindWidget))
 	UProgressBar* ProgressBar;
@@ -25,4 +27,7 @@ protected:
 	float MaxTime{0.f};
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentTime{0.f};
+
+private:
+	bool bPause{false};
 };

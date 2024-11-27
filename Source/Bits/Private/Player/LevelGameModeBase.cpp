@@ -7,13 +7,58 @@
 #include "HUD/CountdownHUDBase.h"
 #include "Player/FirstPersonPlayerBase.h"
 
-void ALevelGameModeBase::StopTime()
+void ALevelGameModeBase::IntoDream(float InDreamTime)
+{
+	CurrentSecondsCount += InDreamTime + GetDreamExtraTime();
+
+	if (CountdownWidget)
+	{
+		CountdownWidget->SetVisibility(ESlateVisibility::Hidden);
+		CountdownWidget->SetCurrentTime(CurrentTime);
+		bInDream = true;
+		CountdownWidget->SetPause(bInDream);
+	}
+
+	OnIntoDream.Broadcast();
+}
+
+void ALevelGameModeBase::OutDream()
 {
 	if (CountdownWidget)
 	{
-		CountdownWidget->RemoveFromParent();
-		CurrentTime = -10.f;
+		CountdownWidget->SetVisibility(ESlateVisibility::Visible);
+		bInDream = false;
+		CountdownWidget->SetPause(bInDream);
 	}
+
+	OnOutDream.Broadcast();
+}
+
+void ALevelGameModeBase::WinGame()
+{
+}
+
+void ALevelGameModeBase::LoseGame()
+{
+}
+
+void ALevelGameModeBase::ReduceTime(float InTime)
+{
+	CurrentTime -= InTime;
+	CurrentTime = CurrentTime < 0 ? 0 : CurrentTime;
+}
+
+FVector ALevelGameModeBase::GetCurrentRoomPos(const FVector& PlayerPos) const
+{
+	for (auto [ThirdPos, Width, Height] : RoomInfo)
+	{
+		if (PlayerPos.X <= ThirdPos.X - Width && PlayerPos.X >= ThirdPos.X + Width
+			&& PlayerPos.Y <= ThirdPos.Y - Height && PlayerPos.Y >= ThirdPos.Y + Height)
+		{
+			return ThirdPos;
+		}
+	}
+	return FVector(0, 0, 500);
 }
 
 void ALevelGameModeBase::BeginPlay()
@@ -48,12 +93,34 @@ void ALevelGameModeBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (CurrentTime > 0)
+	if (!bInDream)
 	{
-		CurrentTime -= DeltaSeconds;
+		if (CurrentTime > 0)
+		{
+			CurrentTime -= DeltaSeconds;
+		}
+		if (CurrentTime <= 0 && CurrentTime > -1.)
+		{
+			if (CurrentSecondsCount >= WinSeconds)
+			{
+				// 通关
+				WinGame();
+			}
+			else
+			{
+				// 失败
+				LoseGame();
+			}
+		}
 	}
-	if (CurrentTime <= 0 && CurrentTime > -1.)
+	else
 	{
+		CurrentDreamTime += DeltaSeconds;
+		if (CurrentDreamTime >= DreamMaxTime)
+		{
+			// 失败
+			LoseGame();
+		}
 	}
 }
 
@@ -96,4 +163,24 @@ AFirstPersonPlayerBase* ALevelGameModeBase::GetPlayer()
 		CurrentPlayer = PlayerController->GetPawn<AFirstPersonPlayerBase>();
 	}
 	return CurrentPlayer;
+}
+
+float ALevelGameModeBase::GetDreamExtraTime()
+{
+	float RandomFloat = FMath::RandRange(0.0f, 1.0f);
+	float CurrentCnt = 0;
+	for (auto& Effect : DreamEffects)
+	{
+		if (RandomFloat <= CurrentCnt)
+		{
+			if (Effect.CurrentTimes >= Effect.Times)
+			{
+				return GetDreamExtraTime();
+			}
+			++Effect.CurrentTimes;
+			return Effect.AddTime;
+		}
+		CurrentCnt += Effect.Probability;
+	}
+	return 0.f;
 }

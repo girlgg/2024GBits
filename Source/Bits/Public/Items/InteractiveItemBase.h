@@ -17,6 +17,7 @@ enum class EInteractionMethod : uint8
 	Inspect,
 	HasItem,
 	IntoDream,
+	OutDream,
 	Max
 };
 
@@ -44,6 +45,12 @@ struct FInteractionMethods
 	/* 背包里的图标 被拾取的物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* InventoryIcon;
+	/* 拾取后是否显示在背包，可拾取物品专用 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowInInventory{true};
+	/* 允许拾取的最大数量，可拾取物品专用 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxItemNum{99};
 
 	/* 需要的背包里有的物品的名字 需要解锁的物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -61,6 +68,10 @@ struct FInteractionMethods
 	/* 说话的每一句的文字 可检视-说话 物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FSubtitleSetting> SayTextPages;
+
+	/* 本次进入睡眠的时间，进入睡眠物体专用 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DreamGetTime;
 };
 
 USTRUCT(BlueprintType)
@@ -108,6 +119,16 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void OnIntoDream();
+	UFUNCTION()
+	void OnOutDream();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_IntoDream();
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_OutDream();
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FInteractiveData InteractiveData;
@@ -139,4 +160,10 @@ protected:
 	/* 交互可用时的UI */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInteractionWidgetComponent* InteractionWidgetComponent;
+	/* 进入梦境后的网格 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSoftObjectPtr<UStaticMesh> IntoDreamMesh;
+	/* 离开梦境后的网格 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSoftObjectPtr<UStaticMesh> OutDreamMesh;
 };

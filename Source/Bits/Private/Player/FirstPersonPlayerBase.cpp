@@ -89,6 +89,12 @@ void AFirstPersonPlayerBase::Pause(const FInputActionValue& Value)
 	}
 }
 
+void AFirstPersonPlayerBase::Navigate(const FInputActionValue& Value)
+{
+	FVector2D Val = Value.Get<FVector2D>();
+	InventoryManager->Navigate(Val.X);
+}
+
 void AFirstPersonPlayerBase::ChangeToFirstPerson()
 {
 	if (CurrentViewMode != EViewMode::FirstPerson)
@@ -99,7 +105,6 @@ void AFirstPersonPlayerBase::ChangeToFirstPerson()
 	{
 		MovementComponent->GravityScale = 1.f;
 	}
-	SetActorLocation(FVector(100, 100, 20));
 
 	if (APlayerController* PC = GetController<APlayerController>())
 	{
@@ -157,6 +162,7 @@ void AFirstPersonPlayerBase::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
 		EnhancedInputComponent->BindAction(BackAction, ETriggerEvent::Started, this, &ThisClass::Back);
 		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started, this, &ThisClass::Pause);
+		EnhancedInputComponent->BindAction(NavigateAction, ETriggerEvent::Started, this, &ThisClass::Navigate);
 	}
 }
 
@@ -180,12 +186,27 @@ void AFirstPersonPlayerBase::ChangeViewMode(EViewMode NewViewMode)
 	}
 }
 
-void AFirstPersonPlayerBase::IntoDream()
+void AFirstPersonPlayerBase::IntoDream(float InDreamTime)
 {
-	ChangeViewMode(EViewMode::ThirdPerson);
+	CurrentFirstPos = GetActorLocation();
 
 	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
-		GM->StopTime();
+		SetActorLocation(GM->GetCurrentRoomPos(CurrentFirstPos));
+		GM->IntoDream(InDreamTime);
 	}
+
+	ChangeViewMode(EViewMode::ThirdPerson);
+}
+
+void AFirstPersonPlayerBase::OutDream()
+{
+	SetActorLocation(CurrentFirstPos);
+
+	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
+	{
+		GM->OutDream();
+	}
+
+	ChangeViewMode(EViewMode::ThirdPerson);
 }

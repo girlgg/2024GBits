@@ -31,7 +31,8 @@ public:
 	UFUNCTION(Exec)
 	void ChangeViewMode(EViewMode NewViewMode);
 
-	void IntoDream();
+	void IntoDream(float InDreamTime);
+	void OutDream();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UCameraManagerComponent> CameraManager;
@@ -50,6 +51,7 @@ protected:
 	void Interact(const FInputActionValue& Value);
 	void Back(const FInputActionValue& Value);
 	void Pause(const FInputActionValue& Value);
+	void Navigate(const FInputActionValue& Value);
 
 	void ChangeToFirstPerson();
 	void ChangeToThirdPerson();
@@ -64,6 +66,8 @@ protected:
 	UInputAction* BackAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
 	UInputAction* PauseAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
+	UInputAction* NavigateAction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* FirstPersonInputMapping;
@@ -76,4 +80,7 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	EViewMode CurrentViewMode{EViewMode::FirstPerson};
+
+private:
+	FVector CurrentFirstPos;
 };

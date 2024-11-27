@@ -21,6 +21,8 @@ public:
 	bool FindItemByName(FString& InName);
 	void ReduceItemByName(FString& InName);
 
+	void Navigate(float Direction);
+
 protected:
 	virtual void BeginPlay() override;
 	void StartGame();
