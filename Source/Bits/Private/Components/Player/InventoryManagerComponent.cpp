@@ -70,8 +70,21 @@ void UInventoryManagerComponent::ReduceItemByName(FString& InName)
 	}
 }
 
+FString UInventoryManagerComponent::GetSelectedItemName()
+{
+	if (IsValid(InventoryHUD))
+	{
+		return InventoryHUD->GetSelectedItemName();
+	}
+	return FString();
+}
+
 void UInventoryManagerComponent::Navigate(float Direction)
 {
+	if (IsValid(InventoryHUD))
+	{
+		InventoryHUD->Navigate(Direction);
+	}
 }
 
 void UInventoryManagerComponent::BeginPlay()

@@ -1,6 +1,7 @@
 ﻿#include "HUD/InventoryHUDBase.h"
 
 #include "Components/HorizontalBox.h"
+#include "Components/TextBlock.h"
 #include "Components/Player/InventoryManagerComponent.h"
 #include "HUD/InventoryItemHUDBase.h"
 #include "Kismet/GameplayStatics.h"
@@ -46,4 +47,48 @@ void UInventoryHUDBase::UpdateItem(FString& InItemName, UTexture2D* InItemIcon, 
 			ItemHUD->SetIcon(InItemIcon);
 		}
 	}
+}
+
+void UInventoryHUDBase::Navigate(float Direction)
+{
+	if (Direction > 0)
+	{
+		++SelectedItemSlotIndex;
+	}
+	else if (Direction < 0)
+	{
+		--SelectedItemSlotIndex;
+	}
+	SelectedItemSlotIndex = FMath::Clamp(SelectedItemSlotIndex, 0, ItemsList.Num() - 1);
+
+	const TArray<UWidget*>& AllItemHUD = InventoryItemSlots->GetAllChildren();
+	for (int32 Index = 0; Index < AllItemHUD.Num(); Index++)
+	{
+		UInventoryItemHUDBase* HUD = Cast<UInventoryItemHUDBase>(AllItemHUD[Index]);
+		if (SelectedItemSlotIndex == Index)
+		{
+			HUD->bIsSelected = true;
+			SelectedItemSlot = HUD;
+			InventoryItemName->SetText(FText::FromString(GetSelectedItemName()));
+		}
+		else
+		{
+			HUD->bIsSelected = false;
+		}
+	}
+}
+
+FString UInventoryHUDBase::GetSelectedItemName()
+{
+	if (IsValid(SelectedItemSlot))
+	{
+		for (auto& Item : ItemsList)
+		{
+			if (Item.Value == SelectedItemSlot)
+			{
+				return Item.Key;
+			}
+		}
+	}
+	return FString();
 }

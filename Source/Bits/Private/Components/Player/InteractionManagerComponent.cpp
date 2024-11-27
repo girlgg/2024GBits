@@ -198,6 +198,8 @@ bool UInteractionManagerComponent::HasItemInteraction()
 {
 	if (GetPlayer())
 	{
+		FInteractionMethods& InteractionMethod = InteractiveItem->InteractiveData.InteractionMethod;
+
 		FString NeedItemName = InteractiveItem->InteractiveData.InteractionMethod.InventoryItemName;
 		if (NeedItemName == TEXT("None") || NeedItemName.IsEmpty())
 		{
@@ -205,14 +207,29 @@ bool UInteractionManagerComponent::HasItemInteraction()
 		}
 		else
 		{
-			if (GetPlayer()->InventoryManager->FindItemByName(NeedItemName))
+			if (InteractionMethod.MustSelectedFirst)
 			{
-				InteractiveItem->PlayerHasItem();
-				if (InteractiveItem->InteractiveData.InteractionMethod.ConsumeItem)
+				if (GetPlayer()->InventoryManager->GetSelectedItemName() == NeedItemName)
 				{
-					GetPlayer()->InventoryManager->ReduceItemByName(NeedItemName);
+					InteractiveItem->PlayerHasItem();
+					if (InteractiveItem->InteractiveData.InteractionMethod.ConsumeItem)
+					{
+						GetPlayer()->InventoryManager->ReduceItemByName(NeedItemName);
+					}
+					return true;
 				}
-				return true;
+			}
+			else
+			{
+				if (GetPlayer()->InventoryManager->FindItemByName(NeedItemName))
+				{
+					InteractiveItem->PlayerHasItem();
+					if (InteractiveItem->InteractiveData.InteractionMethod.ConsumeItem)
+					{
+						GetPlayer()->InventoryManager->ReduceItemByName(NeedItemName);
+					}
+					return true;
+				}
 			}
 		}
 	}

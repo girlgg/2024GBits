@@ -17,6 +17,9 @@ public:
 	void SetNum(int32 InNum);
 	void SetIcon(UTexture2D* Icon);
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsSelected{false};
+
 protected:
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* ItemNum;

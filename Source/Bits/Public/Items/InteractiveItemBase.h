@@ -58,6 +58,9 @@ struct FInteractionMethods
 	/* 使用上面物品后是否被消耗 需要解锁的物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool ConsumeItem;
+	/*  必须在背包选择该物品才能使用 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool MustSelectedFirst{false};
 
 	/* 检视方法（可读） 可检视物品专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

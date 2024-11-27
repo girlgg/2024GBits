@@ -20,6 +20,7 @@ public:
 
 	bool FindItemByName(FString& InName);
 	void ReduceItemByName(FString& InName);
+	FString GetSelectedItemName();
 
 	void Navigate(float Direction);
 
