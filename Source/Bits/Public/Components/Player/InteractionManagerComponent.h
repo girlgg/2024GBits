@@ -26,9 +26,12 @@ public:
 	UInteractionManagerComponent();
 
 	bool CanInteract();
+	void ClickInteraction();
 	virtual void RootInteraction();
 
 	void CloseInspect();
+
+	void Navigate(float Direction);
 
 protected:
 	virtual void BeginPlay() override;
@@ -39,6 +42,11 @@ protected:
 	void InspectUI();
 	bool HasItemInteraction();
 
+	void ReadPaper();
+	void MakeSay();
+
+	void DoorInteraction();
+	
 	void IntoDream(float InDreamTime);
 	void OutDream();
 
@@ -54,6 +62,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	AInteractiveItemBase* InteractiveItem;
+
+	UPROPERTY(Transient)
+	AInteractiveItemBase* LastInteractiveItem;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UInspectHUDBase> InspectHUDClass;
@@ -71,6 +82,10 @@ private:
 	AFirstPersonPlayerBase* CurrentPlayer{nullptr};
 
 	EInteractionState CurrentInspectState;
+
+	float CurrentGazeTime{0.f};
+
+	bool bIsGazeInteraction{false};
 
 public:
 	bool bUseMouseLocation{false};

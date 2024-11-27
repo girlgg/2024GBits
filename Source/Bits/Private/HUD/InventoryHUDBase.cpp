@@ -31,6 +31,10 @@ void UInventoryHUDBase::UpdateItem(FString& InItemName, UTexture2D* InItemIcon, 
 		ItemHUD = CreateWidget<UInventoryItemHUDBase>(GetWorld(), ItemHUDClass);
 		if (ItemHUD)
 		{
+			if (ItemsList.IsEmpty())
+			{
+				SelectedItemSlot = ItemHUD;
+			}
 			ItemsList.Add(InItemName, ItemHUD);
 			InventoryItemSlots->AddChildToHorizontalBox(ItemHUD);
 		}
@@ -69,7 +73,6 @@ void UInventoryHUDBase::Navigate(float Direction)
 		{
 			HUD->bIsSelected = true;
 			SelectedItemSlot = HUD;
-			InventoryItemName->SetText(FText::FromString(GetSelectedItemName()));
 		}
 		else
 		{
@@ -91,4 +94,9 @@ FString UInventoryHUDBase::GetSelectedItemName()
 		}
 	}
 	return FString();
+}
+
+FText UInventoryHUDBase::GetSelectedItemNameText()
+{
+	return FText::FromString(GetSelectedItemName());
 }

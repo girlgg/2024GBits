@@ -108,10 +108,6 @@ void UInventoryManagerComponent::CreateHUD()
 			if (InventoryHUD)
 			{
 				InventoryHUD->AddToViewport();
-
-				FInputModeGameOnly InputMode;
-				PlayerController->SetInputMode(InputMode);
-				PlayerController->bShowMouseCursor = false;
 			}
 		}
 	}

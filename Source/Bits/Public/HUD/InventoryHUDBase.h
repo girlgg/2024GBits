@@ -21,13 +21,14 @@ public:
 
 	void Navigate(float Direction);
 
+	UFUNCTION(BlueprintCallable)
 	FString GetSelectedItemName();
+	UFUNCTION(BlueprintCallable)
+	FText GetSelectedItemNameText();
 
 protected:
 	UPROPERTY(meta=(BindWidget))
 	UHorizontalBox* InventoryItemSlots;
-	UPROPERTY(meta=(BindWidget))
-	UTextBlock* InventoryItemName;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UInventoryItemHUDBase> ItemHUDClass;
 

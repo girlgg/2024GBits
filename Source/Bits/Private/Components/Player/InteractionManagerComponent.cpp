@@ -5,7 +5,9 @@
 #include "Components/Player/SequenceManagerComponent.h"
 #include "HUD/InspectHUDBase.h"
 #include "Items/InteractiveItemBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/FirstPersonPlayerBase.h"
+#include "Player/LevelGameModeBase.h"
 
 UInteractionManagerComponent::UInteractionManagerComponent()
 {
@@ -14,6 +16,14 @@ UInteractionManagerComponent::UInteractionManagerComponent()
 bool UInteractionManagerComponent::CanInteract()
 {
 	return InteractiveItem != nullptr;
+}
+
+void UInteractionManagerComponent::ClickInteraction()
+{
+	if (InteractiveItem && !InteractiveItem->bIsGazeInteraction)
+	{
+		RootInteraction();
+	}
 }
 
 void UInteractionManagerComponent::RootInteraction()
@@ -38,15 +48,10 @@ void UInteractionManagerComponent::RootInteraction()
 		case EInspectMethod::None:
 			break;
 		case EInspectMethod::Readable:
-			InspectUI();
-			UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), InspectMapping);
-			CurrentInspectState = EInteractionState::Inspecting;
+			ReadPaper();
 			break;
 		case EInspectMethod::Say:
-			if (GetPlayer())
-			{
-				GetPlayer()->SequenceManager->PlaySubtitles(TargetInteractiveData.InteractionMethod.SayTextPages);
-			}
+			MakeSay();
 			break;
 		case EInspectMethod::Max:
 			break;
@@ -63,6 +68,9 @@ void UInteractionManagerComponent::RootInteraction()
 		OutDream();
 		InteractiveItem->PlayerHasItem();
 		break;
+	case EInteractionMethod::Door:
+		DoorInteraction();
+		break;
 	case EInteractionMethod::Max:
 		break;
 	}
@@ -77,6 +85,14 @@ void UInteractionManagerComponent::CloseInspect()
 	CurrentInspectState = EInteractionState::None;
 }
 
+void UInteractionManagerComponent::Navigate(float Direction)
+{
+	if (IsValid(InspectHUD))
+	{
+		InspectHUD->NavigateReadablePages(Direction);
+	}
+}
+
 void UInteractionManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -89,79 +105,85 @@ void UInteractionManagerComponent::BeginPlay()
 
 void UInteractionManagerComponent::CheckInteraction()
 {
-	if (InteractiveItem)
+	LastInteractiveItem = InteractiveItem;
+
+	auto ProcessHitResult = [&](AActor* HitActor)
 	{
-		InteractiveItem->Outline(false);
-		InteractiveItem = nullptr;
-	}
-	if (bUseMouseLocation)
-	{
-		if (AllowInteraction())
+		if (HitActor)
 		{
-			APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-			if (PlayerController)
+			InteractiveItem = Cast<AInteractiveItemBase>(HitActor);
+			if (InteractiveItem)
 			{
-				FVector CameraLocation;
-				FRotator CameraRotation;
-				PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+				InteractiveItem->Outline(true);
+			}
+			if (LastInteractiveItem && InteractiveItem != LastInteractiveItem)
+			{
+				LastInteractiveItem->Outline(false);
+			}
+		}
+	};
 
-				FHitResult HitResult;
-				FCollisionQueryParams Params;
-				Params.AddIgnoredActor(GetOwner());
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (AllowInteraction() && PlayerController)
+	{
+		if (bUseMouseLocation)
+		{
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(GetOwner());
 
-				FVector2D MousePosition;
-				if (PlayerController->GetMousePosition(MousePosition.X, MousePosition.Y))
+			FVector2D MousePosition;
+			if (PlayerController->GetMousePosition(MousePosition.X, MousePosition.Y))
+			{
+				if (PlayerController->GetHitResultAtScreenPosition(
+					MousePosition, ECC_GameTraceChannel1, Params, HitResult))
 				{
-					if (PlayerController->GetHitResultAtScreenPosition(
-						MousePosition, ECC_GameTraceChannel1, Params, HitResult))
-					{
-						AActor* HitActor = HitResult.GetActor();
-						if (HitActor)
-						{
-							InteractiveItem = Cast<AInteractiveItemBase>(HitActor);
-							if (InteractiveItem)
-							{
-								InteractiveItem->Outline(true);
-							}
-						}
-					}
+					ProcessHitResult(HitResult.GetActor());
 				}
 			}
 		}
-	}
-	else
-	{
-		if (AllowInteraction())
+		else
 		{
-			APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-			if (PlayerController)
+			FVector CameraLocation;
+			FRotator CameraRotation;
+			PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
+
+			FVector Start = CameraLocation;
+			FVector End = Start + (CameraRotation.Vector() * MaxRayDistance);
+
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(GetOwner());
+
+			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, Params))
 			{
-				FVector CameraLocation;
-				FRotator CameraRotation;
-				PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
-
-				FVector Start = CameraLocation;
-				FVector End = Start + (CameraRotation.Vector() * MaxRayDistance);
-
-				FHitResult HitResult;
-				FCollisionQueryParams Params;
-				Params.AddIgnoredActor(GetOwner());
-
-				if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, Params))
-				{
-					AActor* HitActor = HitResult.GetActor();
-					if (HitActor)
-					{
-						InteractiveItem = Cast<AInteractiveItemBase>(HitActor);
-						if (InteractiveItem)
-						{
-							InteractiveItem->Outline(true);
-						}
-					}
-				}
+				ProcessHitResult(HitResult.GetActor());
 			}
 		}
 	}
+
+	if (LastInteractiveItem && LastInteractiveItem->bIsGazeInteraction)
+	{
+		if (LastInteractiveItem == InteractiveItem)
+		{
+			if (!bIsGazeInteraction)
+			{
+				CurrentGazeTime += InteractionCheckTime;
+				if (CurrentGazeTime > InteractiveItem->GazeDuration)
+				{
+					CurrentGazeTime = 0.f;
+					bIsGazeInteraction = true;
+					RootInteraction();
+				}
+			}
+		}
+		else
+		{
+			bIsGazeInteraction = false;
+			CurrentGazeTime = 0.f;
+		}
+	}
+
 	GetWorld()->GetTimerManager().SetTimer(InteractCheckTimer,
 	                                       this,
 	                                       &ThisClass::CheckInteraction,
@@ -185,10 +207,6 @@ void UInteractionManagerComponent::InspectUI()
 			if (InspectHUD)
 			{
 				InspectHUD->AddToViewport();
-
-				FInputModeGameOnly InputMode;
-				PlayerController->SetInputMode(InputMode);
-				PlayerController->bShowMouseCursor = false;
 			}
 		}
 	}
@@ -233,7 +251,36 @@ bool UInteractionManagerComponent::HasItemInteraction()
 			}
 		}
 	}
+	InteractiveItem->K2_NotFound();
 	return false;
+}
+
+void UInteractionManagerComponent::ReadPaper()
+{
+	InspectUI();
+	if (IsValid(InspectHUD))
+	{
+		InspectHUD->UpdateReadText(InteractiveItem->InteractiveData.InteractionMethod.ReadableTextPages);
+	}
+	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), InspectMapping);
+	CurrentInspectState = EInteractionState::Inspecting;
+}
+
+void UInteractionManagerComponent::MakeSay()
+{
+	if (GetPlayer())
+	{
+		GetPlayer()->SequenceManager->PlaySubtitles(InteractiveItem->InteractiveData.InteractionMethod.SayTextPages);
+	}
+}
+
+void UInteractionManagerComponent::DoorInteraction()
+{
+	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
+	{
+		FVector NextPos = GM->GetCurrentRoomPos(InteractiveItem->NextRoomPos);
+		GM->ChangePlayerPos(NextPos);
+	}
 }
 
 void UInteractionManagerComponent::IntoDream(float InDreamTime)

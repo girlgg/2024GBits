@@ -34,57 +34,86 @@ void AFirstPersonPlayerBase::BeginPlay()
 
 void AFirstPersonPlayerBase::Move(const FInputActionValue& Value)
 {
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller)
+	if (!bIsPause)
 	{
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-		AddMovementInput(GetActorRightVector(), MovementVector.X);
+		FVector2D MovementVector = Value.Get<FVector2D>();
+
+		if (Controller)
+		{
+			AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+			AddMovementInput(GetActorRightVector(), MovementVector.X);
+		}
 	}
 }
 
 void AFirstPersonPlayerBase::Look(const FInputActionValue& Value)
 {
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (Controller)
+	if (!bIsPause)
 	{
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+		if (Controller)
+		{
+			AddControllerYawInput(LookAxisVector.X);
+			AddControllerPitchInput(LookAxisVector.Y);
+		}
 	}
 }
 
 void AFirstPersonPlayerBase::Interact(const FInputActionValue& Value)
 {
-	InteractionManager->RootInteraction();
+	if (!bIsPause)
+	{
+		InteractionManager->ClickInteraction();
+	}
 }
 
 void AFirstPersonPlayerBase::Back(const FInputActionValue& Value)
 {
-	InteractionManager->CloseInspect();
-	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
+	if (!bIsPause)
+	{
+		InteractionManager->CloseInspect();
+		UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
+	}
 }
 
 void AFirstPersonPlayerBase::Pause(const FInputActionValue& Value)
 {
-	if (IsValid(PauseMenuHUD))
+	if (bIsPause)
 	{
-		PauseMenuHUD->RemoveFromParent();
-		PauseMenuHUD = nullptr;
-	}
-	else if (IsValid(PauseMenuHUDClass))
-	{
-		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+		bIsPause = false;
+		if (IsValid(PauseMenuHUD))
 		{
-			PauseMenuHUD = CreateWidget<UPauseMenuHUDBase>(PlayerController, PauseMenuHUDClass);
-			if (PauseMenuHUD)
+			PauseMenuHUD->RemoveFromParent();
+			PauseMenuHUD = nullptr;
+		}
+		if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
+		{
+			GM->ContinueGame();
+		}
+	}
+	else
+	{
+		bIsPause = true;
+		if (IsValid(PauseMenuHUD))
+		{
+			PauseMenuHUD->RemoveFromParent();
+			PauseMenuHUD = nullptr;
+		}
+		else if (IsValid(PauseMenuHUDClass))
+		{
+			if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 			{
-				PauseMenuHUD->AddToViewport();
-
-				FInputModeUIOnly InputMode;
-				PlayerController->SetInputMode(InputMode);
-				PlayerController->bShowMouseCursor = true;
+				PauseMenuHUD = CreateWidget<UPauseMenuHUDBase>(PlayerController, PauseMenuHUDClass);
+				if (PauseMenuHUD)
+				{
+					PauseMenuHUD->AddToViewport();
+				}
 			}
+		}
+		if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
+		{
+			GM->PauseGame();
 		}
 	}
 }
@@ -93,6 +122,7 @@ void AFirstPersonPlayerBase::Navigate(const FInputActionValue& Value)
 {
 	FVector2D Val = Value.Get<FVector2D>();
 	InventoryManager->Navigate(Val.X);
+	InteractionManager->Navigate(Val.X);
 }
 
 void AFirstPersonPlayerBase::ChangeToFirstPerson()
@@ -208,5 +238,5 @@ void AFirstPersonPlayerBase::OutDream()
 		GM->OutDream();
 	}
 
-	ChangeViewMode(EViewMode::ThirdPerson);
+	ChangeViewMode(EViewMode::FirstPerson);
 }

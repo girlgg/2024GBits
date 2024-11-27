@@ -18,6 +18,7 @@ enum class EInteractionMethod : uint8
 	HasItem,
 	IntoDream,
 	OutDream,
+	Door,
 	Max
 };
 
@@ -119,6 +120,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayerHasItem();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_NotFound();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -141,6 +145,17 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void Outline(bool bEnable);
+
+	/* 交互为门时，下一个房间的位置，该坐标在下一个房间即可，会自动找合适的位置 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Door")
+	FVector NextRoomPos;
+	
+	/* 是否为凝视交互（鼠标或视角中心悬停），否则为点按交互 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
+	bool bIsGazeInteraction{false};
+	/* 为凝视交互时，凝视触发事件时长 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
+	float GazeDuration{1.f};
 
 protected:
 	UFUNCTION()

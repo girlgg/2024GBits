@@ -22,6 +22,7 @@ protected:
 	UTextBlock* SubtitleText;
 
 private:
+	FTimerHandle TimerHandle;
 	TArray<FSubtitleSetting> Subtitles;
 	int32 CurrentSubtitleIndex{0};
 };

@@ -37,10 +37,6 @@ void ACameraManagerBase::CreateCameraHUD()
 			if (GeneralHUD)
 			{
 				GeneralHUD->AddToViewport();
-
-				FInputModeGameOnly InputMode;
-				PlayerController->SetInputMode(InputMode);
-				PlayerController->bShowMouseCursor = false;
 			}
 		}
 	}

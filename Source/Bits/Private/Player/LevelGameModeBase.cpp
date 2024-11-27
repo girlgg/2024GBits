@@ -5,6 +5,8 @@
 #include "Common/SubtitleSetting.h"
 #include "Components/Player/SequenceManagerComponent.h"
 #include "HUD/CountdownHUDBase.h"
+#include "HUD/StartGameHUDBase.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/FirstPersonPlayerBase.h"
 
 void ALevelGameModeBase::IntoDream(float InDreamTime)
@@ -40,6 +42,8 @@ void ALevelGameModeBase::WinGame()
 
 void ALevelGameModeBase::LoseGame()
 {
+	const FName NextLevelName = "GameOverLevel";
+	UGameplayStatics::OpenLevel(this, NextLevelName);
 }
 
 void ALevelGameModeBase::ReduceTime(float InTime)
@@ -48,58 +52,65 @@ void ALevelGameModeBase::ReduceTime(float InTime)
 	CurrentTime = CurrentTime < 0 ? 0 : CurrentTime;
 }
 
+void ALevelGameModeBase::PauseGame()
+{
+	bIsPause = true;
+	CountdownWidget->SetPause(true);
+}
+
+void ALevelGameModeBase::ContinueGame()
+{
+	bIsPause = false;
+	CountdownWidget->SetPause(bInDream);
+}
+
 FVector ALevelGameModeBase::GetCurrentRoomPos(const FVector& PlayerPos) const
 {
 	for (auto [ThirdPos, Width, Height] : RoomInfo)
 	{
-		if (PlayerPos.X <= ThirdPos.X - Width && PlayerPos.X >= ThirdPos.X + Width
-			&& PlayerPos.Y <= ThirdPos.Y - Height && PlayerPos.Y >= ThirdPos.Y + Height)
+		if (PlayerPos.X >= ThirdPos.X - Width &&
+			PlayerPos.X <= ThirdPos.X + Width &&
+			PlayerPos.Y >= ThirdPos.Y - Height &&
+			PlayerPos.Y <= ThirdPos.Y + Height)
 		{
 			return ThirdPos;
 		}
 	}
-	return FVector(0, 0, 500);
+	return RoomInfo[0].ThirdPos;
+}
+
+void ALevelGameModeBase::ChangePlayerPos(const FVector& PlayerPos)
+{
+	if (GetPlayer())
+	{
+		GetPlayer()->SetActorLocation(PlayerPos);
+	}
 }
 
 void ALevelGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (!SubtitlesBeforeStartGame.IsEmpty())
-	{
-		float DelayStartTime = 0.f;
-		for (auto& Text : SubtitlesBeforeStartGame)
-		{
-			DelayStartTime += Text.SubtitleDelay;
-		}
-
-		FTimerHandle StartGameTimerHandle;
-		GetWorldTimerManager().SetTimer(
-			StartGameTimerHandle,
-			this,
-			&ThisClass::StartGame,
-			DelayStartTime,
-			false
-		);
-		PlaySubtitles(SubtitlesBeforeStartGame);
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::StartGame);
-	}
+	CurrentTime = LevelTime;
+	bIsPause = true;
+	ShowLevelTitle();
 }
 
 void ALevelGameModeBase::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	if (bIsPause)
+	{
+		return;
+	}
 	if (!bInDream)
 	{
 		if (CurrentTime > 0)
 		{
 			CurrentTime -= DeltaSeconds;
 		}
-		if (CurrentTime <= 0 && CurrentTime > -1.)
+		else if (CurrentTime <= 0 && CurrentTime > -1.)
 		{
 			if (CurrentSecondsCount >= WinSeconds)
 			{
@@ -124,9 +135,55 @@ void ALevelGameModeBase::Tick(float DeltaSeconds)
 	}
 }
 
+void ALevelGameModeBase::ShowLevelTitle()
+{
+	if (StartGameWidgetClass)
+	{
+		StartGameWidget = CreateWidget<UStartGameHUDBase>(GetWorld(), StartGameWidgetClass);
+		if (StartGameWidget)
+		{
+			StartGameWidget->AddToViewport();
+		}
+		StartGameWidget->UpdateTitleName(LevelName);
+		float TitleTime = StartGameWidget->PlayHideAnim();
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::StartGameDialog, TitleTime, false);
+	}
+}
+
+void ALevelGameModeBase::StartGameDialog()
+{
+	if (StartGameWidget)
+	{
+		StartGameWidget->RemoveFromParent();
+	}
+	if (!SubtitlesBeforeStartGame.IsEmpty())
+	{
+		float DelayStartTime = 0.f;
+		for (auto& Text : SubtitlesBeforeStartGame)
+		{
+			DelayStartTime += Text.SubtitleDelay;
+		}
+
+		FTimerHandle StartGameTimerHandle;
+		GetWorldTimerManager().SetTimer(
+			StartGameTimerHandle,
+			this,
+			&ThisClass::StartGame,
+			DelayStartTime,
+			false
+		);
+		PlaySubtitles(SubtitlesBeforeStartGame);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::StartGame);
+	}
+}
+
 void ALevelGameModeBase::StartGame()
 {
-	CurrentTime = LevelTime;
+	bIsPause = false;
 	if (CountdownWidgetClass)
 	{
 		CountdownWidget = CreateWidget<UCountdownHUDBase>(GetWorld(), CountdownWidgetClass);

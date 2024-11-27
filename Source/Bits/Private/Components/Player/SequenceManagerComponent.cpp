@@ -14,10 +14,12 @@ void USequenceManagerComponent::PlaySubtitles(const TArray<FSubtitleSetting>& Su
 		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 		{
 			SequenceHUD = CreateWidget<USequenceHUDBase>(PlayerController, SequenceHUDClass);
+			SequenceHUD->AddToViewport();
 		}
 	}
 	if (IsValid(SequenceHUD))
 	{
+		SequenceHUD->SetVisibility(ESlateVisibility::Visible);
 		SequenceHUD->DisplaySubtitles(Subtitles);
 	}
 }

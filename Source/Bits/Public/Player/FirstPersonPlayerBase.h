@@ -83,4 +83,6 @@ protected:
 
 private:
 	FVector CurrentFirstPos;
+
+	bool bIsPause{false};
 };

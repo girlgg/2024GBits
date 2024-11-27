@@ -4,6 +4,7 @@
 #include "GameFramework/GameMode.h"
 #include "LevelGameModeBase.generated.h"
 
+class UStartGameHUDBase;
 class AFirstPersonPlayerBase;
 struct FSubtitleSetting;
 class UCountdownHUDBase;
@@ -65,7 +66,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ReduceTime(float InTime);
 
+	UFUNCTION(BlueprintCallable)
+	void PauseGame();
+	UFUNCTION(BlueprintCallable)
+	void ContinueGame();
+
 	FVector GetCurrentRoomPos(const FVector& PlayerPos) const;
+
+	void ChangePlayerPos(const FVector& PlayerPos);
 
 	UPROPERTY(BlueprintAssignable)
 	FOnIntoDream OnIntoDream;
@@ -73,10 +81,11 @@ public:
 	FOnOutDream OnOutDream;
 
 protected:
-
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
+	void ShowLevelTitle();
+	void StartGameDialog();
 	void StartGame();
 
 	UFUNCTION(BlueprintCallable)
@@ -89,9 +98,13 @@ protected:
 	/* 倒计时HUD控件 */
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UCountdownHUDBase> CountdownWidgetClass;
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UStartGameHUDBase> StartGameWidgetClass;
 
 	UPROPERTY(Transient, BlueprintReadOnly)
 	UCountdownHUDBase* CountdownWidget;
+	UPROPERTY(Transient, BlueprintReadOnly)
+	UStartGameHUDBase* StartGameWidget;
 
 	/* 本关开始前对话 */
 	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
@@ -107,11 +120,15 @@ protected:
 
 	/* 通关需要睡觉的秒数 */
 	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
-	float WinSeconds{0.f};
+	float WinSeconds{1.f};
 
 	/* 本关睡觉特殊效果 */
 	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
 	TArray<FDreamEffect> DreamEffects;
+
+	/* 本关标题 */
+	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
+	FString LevelName;
 
 	/* 梦境进入时长，超过失败游戏 */
 	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
@@ -129,4 +146,5 @@ private:
 	bool bInDream{false};
 
 	float CurrentTime;
+	bool bIsPause{false};
 };
