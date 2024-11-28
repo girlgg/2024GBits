@@ -17,6 +17,9 @@ public:
 	void SetNum(int32 InNum);
 	void SetIcon(UTexture2D* Icon);
 
+	void IntoDream();
+	void OutDream();
+
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsSelected{false};
 
@@ -26,4 +29,15 @@ protected:
 
 	UPROPERTY(meta=(BindWidget))
 	UImage* ItemImage;
+
+	/* 现实背景 */
+	UPROPERTY(EditDefaultsOnly)
+	UTexture2D* BackgroundT;
+
+	/* 梦境背景 */
+	UPROPERTY(EditDefaultsOnly)
+	UTexture2D* BackgroundD;
+
+	UPROPERTY(BlueprintReadOnly)
+	UTexture2D* BackgroundImage;
 };

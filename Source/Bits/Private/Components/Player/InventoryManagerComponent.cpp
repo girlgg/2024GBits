@@ -7,14 +7,15 @@ UInventoryManagerComponent::UInventoryManagerComponent()
 {
 }
 
-void UInventoryManagerComponent::AddItemToInventory(FInteractiveData& InInteractiveData,
+bool UInventoryManagerComponent::AddItemToInventory(const FInteractiveData& InInteractiveData,
                                                     AInteractiveItemBase* PendingKill)
 {
 	auto& Item = InventoryItems.FindOrAdd(InInteractiveData);
 	if (Item >= InInteractiveData.InteractionMethod.MaxItemNum)
 	{
-		// TODO：触发拾取失败事件
-		return;
+		// 拾取失败事件
+		PendingKill->FailToPickup();
+		return false;
 	}
 	++Item;
 	if (IsValid(PendingKill))
@@ -23,7 +24,7 @@ void UInventoryManagerComponent::AddItemToInventory(FInteractiveData& InInteract
 	}
 	if (!InInteractiveData.InteractionMethod.bShowInInventory)
 	{
-		return;
+		return true;
 	}
 	if (!IsValid(InventoryHUD))
 	{
@@ -33,6 +34,7 @@ void UInventoryManagerComponent::AddItemToInventory(FInteractiveData& InInteract
 	{
 		InventoryHUD->UpdateItem(InInteractiveData.ObjectName, InInteractiveData.InteractionMethod.InventoryIcon, Item);
 	}
+	return true;
 }
 
 bool UInventoryManagerComponent::FindItemByName(FString& InName)
@@ -84,6 +86,22 @@ void UInventoryManagerComponent::Navigate(float Direction)
 	if (IsValid(InventoryHUD))
 	{
 		InventoryHUD->Navigate(Direction);
+	}
+}
+
+void UInventoryManagerComponent::IntoDream()
+{
+	if (InventoryHUD)
+	{
+		InventoryHUD->IntoDream();
+	}
+}
+
+void UInventoryManagerComponent::OutDream()
+{
+	if (InventoryHUD)
+	{
+		InventoryHUD->OutDream();
 	}
 }
 

@@ -14,6 +14,22 @@ void UCameraManagerComponent::StartGame()
 	GetCameraManager()->StartGame();
 }
 
+void UCameraManagerComponent::ShowCameraHUD()
+{
+	if (GetCameraManager())
+	{
+		GetCameraManager()->ShowCameraHUD();
+	}
+}
+
+void UCameraManagerComponent::HideCameraHUD()
+{
+	if (GetCameraManager())
+	{
+		GetCameraManager()->HideCameraHUD();
+	}
+}
+
 void UCameraManagerComponent::CreateCameraHUD()
 {
 	if (GetCameraManager())

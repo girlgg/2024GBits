@@ -34,6 +34,9 @@ public:
 	void IntoDream(float InDreamTime);
 	void OutDream();
 
+	void BePause();
+    void OutPause();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UCameraManagerComponent> CameraManager;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -42,6 +45,9 @@ public:
 	TObjectPtr<UInventoryManagerComponent> InventoryManager;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<USequenceManagerComponent> SequenceManager;
+
+	UPROPERTY(BlueprintReadWrite)
+	EViewMode CurrentViewMode{EViewMode::FirstPerson};
 
 protected:
 	virtual void BeginPlay() override;
@@ -78,11 +84,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "HUD", Transient)
 	UPauseMenuHUDBase* PauseMenuHUD;
 
-	UPROPERTY(BlueprintReadWrite)
-	EViewMode CurrentViewMode{EViewMode::FirstPerson};
-
 private:
 	FVector CurrentFirstPos;
+	FRotator CurrentFirstRotator;
 
 	bool bIsPause{false};
 };

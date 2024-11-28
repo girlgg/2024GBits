@@ -11,7 +11,7 @@ class BITS_API UStartGameHUDBase : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	void UpdateTitleName(FString& InTitle);
+	void UpdateTitleName(const FString& InTitle);
 	float PlayHideAnim();
 
 protected:

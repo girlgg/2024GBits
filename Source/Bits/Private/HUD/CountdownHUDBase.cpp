@@ -42,3 +42,13 @@ void UCountdownHUDBase::SetPause(bool bIsPause)
 {
 	bPause = bIsPause;
 }
+
+void UCountdownHUDBase::SetSleepTime(int32 InTime)
+{
+	CurrentSleepTime = InTime;
+}
+
+void UCountdownHUDBase::SetDayInfo(int32 InDay)
+{
+	CurrentDayInfo = InDay;
+}

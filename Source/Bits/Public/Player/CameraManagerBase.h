@@ -18,6 +18,9 @@ public:
 	void StartGame();
 	virtual void Tick(float DeltaSeconds) override;
 
+	void ShowCameraHUD();
+	void HideCameraHUD();
+
 	void CreateCameraHUD();
 	void DestroyCameraHUD();
 

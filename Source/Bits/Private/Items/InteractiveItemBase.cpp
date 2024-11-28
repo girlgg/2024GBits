@@ -69,18 +69,36 @@ void AInteractiveItemBase::Tick(float DeltaTime)
 
 void AInteractiveItemBase::Outline(bool bEnable)
 {
-	Mesh->SetRenderCustomDepth(bEnable);
+	if (bShowOutline == bEnable)
+	{
+		return;
+	}
+	bShowOutline = bEnable;
+	if (bEnable && bAllowInteract)
+	{
+		InteractionWidgetComponent->ShowPrompt();
+	}
+	else
+	{
+		bShowOutline = false;
+		InteractionWidgetComponent->HidePrompt();
+	}
+
+	Mesh->SetRenderCustomDepth(bShowOutline);
 }
 
 void AInteractiveItemBase::OnPlayerInUI(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                         const FHitResult& SweepResult)
 {
-	InteractionWidgetComponent->CurrentWidget->SetRenderOpacity(.85f);
+	if (bAllowInteract)
+	{
+		InteractionWidgetComponent->ShowPrompt();
+	}
 }
 
 void AInteractiveItemBase::OnPlayerOutUI(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                          UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	InteractionWidgetComponent->CurrentWidget->SetRenderOpacity(.0f);
+	InteractionWidgetComponent->HidePrompt();
 }

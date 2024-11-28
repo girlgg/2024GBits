@@ -18,6 +18,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void PlaySubtitles(const TArray<FSubtitleSetting>& Subtitles);
 
+	void IntoDream();
+	void OutDream();
+
 protected:
 	virtual void BeginPlay() override;
 

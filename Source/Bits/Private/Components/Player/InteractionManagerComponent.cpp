@@ -15,12 +15,12 @@ UInteractionManagerComponent::UInteractionManagerComponent()
 
 bool UInteractionManagerComponent::CanInteract()
 {
-	return InteractiveItem != nullptr;
+	return InteractiveItem != nullptr && LastInteractiveItem != nullptr && InteractiveItem->bAllowInteract;
 }
 
 void UInteractionManagerComponent::ClickInteraction()
 {
-	if (InteractiveItem && !InteractiveItem->bIsGazeInteraction)
+	if (InteractiveItem && !InteractiveItem->bIsGazeInteraction && InteractiveItem->bAllowInteract)
 	{
 		RootInteraction();
 	}
@@ -39,7 +39,10 @@ void UInteractionManagerComponent::RootInteraction()
 	case EInteractionMethod::Pickup:
 		if (GetPlayer())
 		{
-			GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem);
+			if (GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem))
+			{
+				InteractiveItem->bAllowInteract = false;
+			}
 		}
 		break;
 	case EInteractionMethod::Inspect:
@@ -49,24 +52,40 @@ void UInteractionManagerComponent::RootInteraction()
 			break;
 		case EInspectMethod::Readable:
 			ReadPaper();
+			HasItemInteraction();
 			break;
 		case EInspectMethod::Say:
 			MakeSay();
+			InteractiveItem->bAllowInteract = false;
+			HasItemInteraction();
 			break;
 		case EInspectMethod::Max:
 			break;
 		}
 		break;
 	case EInteractionMethod::HasItem:
-		HasItemInteraction();
+		if (HasItemInteraction())
+		{
+			InteractiveItem->bAllowInteract = false;
+		}
 		break;
 	case EInteractionMethod::IntoDream:
+		HasItemInteraction();
+		if (GetPlayer())
+		{
+			GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem);
+		}
 		IntoDream(TargetInteractiveData.InteractionMethod.DreamGetTime);
-		InteractiveItem->PlayerHasItem();
+		InteractiveItem->bAllowInteract = false;
 		break;
 	case EInteractionMethod::OutDream:
+		HasItemInteraction();
+		if (GetPlayer())
+		{
+			GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem);
+		}
 		OutDream();
-		InteractiveItem->PlayerHasItem();
+		InteractiveItem->bAllowInteract = false;
 		break;
 	case EInteractionMethod::Door:
 		DoorInteraction();
@@ -107,6 +126,11 @@ void UInteractionManagerComponent::CheckInteraction()
 {
 	LastInteractiveItem = InteractiveItem;
 
+	if (InteractiveItem && !InteractiveItem->bAllowInteract)
+	{
+		InteractiveItem->Outline(false);
+	}
+
 	auto ProcessHitResult = [&](AActor* HitActor)
 	{
 		if (HitActor)
@@ -120,6 +144,11 @@ void UInteractionManagerComponent::CheckInteraction()
 			{
 				LastInteractiveItem->Outline(false);
 			}
+		}
+		else
+		{
+			LastInteractiveItem->Outline(false);
+			LastInteractiveItem = nullptr;
 		}
 	};
 
@@ -140,6 +169,11 @@ void UInteractionManagerComponent::CheckInteraction()
 				{
 					ProcessHitResult(HitResult.GetActor());
 				}
+				else if (LastInteractiveItem)
+				{
+					LastInteractiveItem->Outline(false);
+					LastInteractiveItem = nullptr;
+				}
 			}
 		}
 		else
@@ -158,6 +192,11 @@ void UInteractionManagerComponent::CheckInteraction()
 			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1, Params))
 			{
 				ProcessHitResult(HitResult.GetActor());
+			}
+			else if (LastInteractiveItem)
+			{
+				LastInteractiveItem->Outline(false);
+				LastInteractiveItem = nullptr;
 			}
 		}
 	}
@@ -222,6 +261,7 @@ bool UInteractionManagerComponent::HasItemInteraction()
 		if (NeedItemName == TEXT("None") || NeedItemName.IsEmpty())
 		{
 			InteractiveItem->PlayerHasItem();
+			return true;
 		}
 		else
 		{
@@ -251,6 +291,10 @@ bool UInteractionManagerComponent::HasItemInteraction()
 			}
 		}
 	}
+	if (GetPlayer())
+	{
+		GetPlayer()->SequenceManager->PlaySubtitles(InteractiveItem->NotFoundPages);
+	}
 	InteractiveItem->K2_NotFound();
 	return false;
 }
@@ -276,10 +320,16 @@ void UInteractionManagerComponent::MakeSay()
 
 void UInteractionManagerComponent::DoorInteraction()
 {
+	if (GetPlayer() && GetPlayer()->CurrentViewMode == EViewMode::FirstPerson)
+	{
+		return;
+	}
 	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
-		FVector NextPos = GM->GetCurrentRoomPos(InteractiveItem->NextRoomPos);
-		GM->ChangePlayerPos(NextPos);
+		FVector Dir = (InteractiveItem->GetActorLocation() - GetPlayer()->GetActorLocation()) / 10;
+		FVector TarPos = InteractiveItem->GetActorLocation() + Dir;
+		const FRoomConfig& Room = GM->GetCurrentRoomPos(TarPos);
+		GM->ChangePlayerPos(Room.ThirdPos);
 	}
 }
 

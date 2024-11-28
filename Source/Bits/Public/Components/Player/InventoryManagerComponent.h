@@ -16,13 +16,16 @@ public:
 	UInventoryManagerComponent();
 	void CreateHUD();
 
-	void AddItemToInventory(FInteractiveData& InInteractiveData, class AInteractiveItemBase* PendingKill);
+	bool AddItemToInventory(const FInteractiveData& InInteractiveData, class AInteractiveItemBase* PendingKill);
 
 	bool FindItemByName(FString& InName);
 	void ReduceItemByName(FString& InName);
 	FString GetSelectedItemName();
 
 	void Navigate(float Direction);
+
+	void IntoDream();
+	void OutDream();
 
 protected:
 	virtual void BeginPlay() override;

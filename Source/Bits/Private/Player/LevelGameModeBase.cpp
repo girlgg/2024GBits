@@ -3,6 +3,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Common/GameplayFunctinos.h"
 #include "Common/SubtitleSetting.h"
+#include "Components/Player/InventoryManagerComponent.h"
 #include "Components/Player/SequenceManagerComponent.h"
 #include "HUD/CountdownHUDBase.h"
 #include "HUD/StartGameHUDBase.h"
@@ -19,6 +20,7 @@ void ALevelGameModeBase::IntoDream(float InDreamTime)
 		CountdownWidget->SetCurrentTime(CurrentTime);
 		bInDream = true;
 		CountdownWidget->SetPause(bInDream);
+		CountdownWidget->SetSleepTime(CurrentSecondsCount);
 	}
 
 	OnIntoDream.Broadcast();
@@ -64,19 +66,19 @@ void ALevelGameModeBase::ContinueGame()
 	CountdownWidget->SetPause(bInDream);
 }
 
-FVector ALevelGameModeBase::GetCurrentRoomPos(const FVector& PlayerPos) const
+const FRoomConfig& ALevelGameModeBase::GetCurrentRoomPos(const FVector& PlayerPos) const
 {
-	for (auto [ThirdPos, Width, Height] : RoomInfo)
+	for (const auto& Room : RoomInfo)
 	{
-		if (PlayerPos.X >= ThirdPos.X - Width &&
-			PlayerPos.X <= ThirdPos.X + Width &&
-			PlayerPos.Y >= ThirdPos.Y - Height &&
-			PlayerPos.Y <= ThirdPos.Y + Height)
+		if (PlayerPos.X >= Room.ThirdPos.X - Room.Width &&
+			PlayerPos.X <= Room.ThirdPos.X + Room.Width &&
+			PlayerPos.Y >= Room.ThirdPos.Y - Room.Height &&
+			PlayerPos.Y <= Room.ThirdPos.Y + Room.Height)
 		{
-			return ThirdPos;
+			return Room;
 		}
 	}
-	return RoomInfo[0].ThirdPos;
+	return RoomInfo[0];
 }
 
 void ALevelGameModeBase::ChangePlayerPos(const FVector& PlayerPos)
@@ -137,29 +139,10 @@ void ALevelGameModeBase::Tick(float DeltaSeconds)
 
 void ALevelGameModeBase::ShowLevelTitle()
 {
-	if (StartGameWidgetClass)
-	{
-		StartGameWidget = CreateWidget<UStartGameHUDBase>(GetWorld(), StartGameWidgetClass);
-		if (StartGameWidget)
-		{
-			StartGameWidget->AddToViewport();
-		}
-		StartGameWidget->UpdateTitleName(LevelName);
-		float TitleTime = StartGameWidget->PlayHideAnim();
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::StartGameDialog, TitleTime, false);
-	}
-}
+	float DelayStartTime = ShowTitle(LevelName, SubtitlesBeforeStartGame);
 
-void ALevelGameModeBase::StartGameDialog()
-{
-	if (StartGameWidget)
-	{
-		StartGameWidget->RemoveFromParent();
-	}
 	if (!SubtitlesBeforeStartGame.IsEmpty())
 	{
-		float DelayStartTime = 0.f;
 		for (auto& Text : SubtitlesBeforeStartGame)
 		{
 			DelayStartTime += Text.SubtitleDelay;
@@ -173,12 +156,48 @@ void ALevelGameModeBase::StartGameDialog()
 			DelayStartTime,
 			false
 		);
-		PlaySubtitles(SubtitlesBeforeStartGame);
 	}
 	else
 	{
 		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::StartGame);
 	}
+}
+
+float ALevelGameModeBase::ShowTitle(const FString& InText, const TArray<FSubtitleSetting>& TextArr, bool bInPause)
+{
+	if (GetPlayer() && bInPause)
+	{
+		GetPlayer()->BePause();
+	}
+	if (StartGameWidget)
+	{
+		StartGameWidget->RemoveFromParent();
+		StartGameWidget = nullptr;
+	}
+	ArrToShow = TextArr;
+	if (StartGameWidgetClass)
+	{
+		StartGameWidget = CreateWidget<UStartGameHUDBase>(GetWorld(), StartGameWidgetClass);
+		if (StartGameWidget)
+		{
+			StartGameWidget->AddToViewport();
+		}
+		StartGameWidget->UpdateTitleName(InText);
+		float TitleTime = StartGameWidget->PlayHideAnim();
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::StartGameDialog, TitleTime, false);
+		return TitleTime;
+	}
+	return 0.f;
+}
+
+void ALevelGameModeBase::StartGameDialog()
+{
+	if (StartGameWidget)
+	{
+		StartGameWidget->RemoveFromParent();
+	}
+	PlaySubtitles(ArrToShow);
 }
 
 void ALevelGameModeBase::StartGame()
@@ -206,6 +225,18 @@ void ALevelGameModeBase::PlaySubtitles(const TArray<FSubtitleSetting>& Subtitles
 	{
 		GetPlayer()->SequenceManager->PlaySubtitles(Subtitles);
 	}
+	float WaitTime = 0.f;
+	for (const FSubtitleSetting& Subtitle : Subtitles)
+	{
+		WaitTime += Subtitle.SubtitleDelay;
+	}
+	GetWorld()->GetTimerManager().SetTimer(SubtitleTimerHandle, [this]()
+	{
+		if (GetPlayer())
+		{
+			GetPlayer()->OutPause();
+		}
+	}, WaitTime, false);
 }
 
 AFirstPersonPlayerBase* ALevelGameModeBase::GetPlayer()

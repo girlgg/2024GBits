@@ -3,12 +3,25 @@
 #include "Common/SubtitleSetting.h"
 #include "Components/TextBlock.h"
 
+void USequenceHUDBase::NativeConstruct()
+{
+	Super::NativeConstruct();
+	BackgroundImage = BackgroundT;
+}
+
+void USequenceHUDBase::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
 void USequenceHUDBase::DisplaySubtitles(const TArray<FSubtitleSetting>& InSubtitles)
 {
-	SubtitleText->SetText(FText());
+	TextToShow = FString("");
 	Subtitles = InSubtitles;
-	CurrentSubtitleIndex = 0;
+
 	GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(TextTimerHandle);
+
 	UpdateSubtitles();
 }
 
@@ -16,9 +29,15 @@ void USequenceHUDBase::UpdateSubtitles()
 {
 	if (CurrentSubtitleIndex < Subtitles.Num())
 	{
-		SubtitleText->SetText(FText::FromString(Subtitles[CurrentSubtitleIndex].SubtitleText));
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::PlaySubtitle,
-		                                       Subtitles[CurrentSubtitleIndex].SubtitleDelay, false);
+		CurrentText = Subtitles[CurrentSubtitleIndex].SubtitleText;
+		CurrentDelay = Subtitles[CurrentSubtitleIndex].SubtitleDelay;
+
+		CurrentTextIdx = 0;
+		TextToShow = FString(1, &CurrentText[CurrentTextIdx++]);
+		CurrentTextDelay = CurrentDelay / CurrentText.Len() / 2.;
+
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::PlaySubtitle, CurrentDelay, false);
+		GetWorld()->GetTimerManager().SetTimer(TextTimerHandle, this, &ThisClass::UpdateText, CurrentTextDelay, false);
 	}
 	else
 	{
@@ -28,8 +47,28 @@ void USequenceHUDBase::UpdateSubtitles()
 	}
 }
 
+void USequenceHUDBase::UpdateText()
+{
+	if (CurrentTextIdx >= CurrentText.Len())
+	{
+		return;
+	}
+	TextToShow += FString(1, &CurrentText[CurrentTextIdx++]);
+	GetWorld()->GetTimerManager().SetTimer(TextTimerHandle, this, &ThisClass::UpdateText, CurrentTextDelay, false);
+}
+
 void USequenceHUDBase::PlaySubtitle()
 {
 	++CurrentSubtitleIndex;
 	UpdateSubtitles();
+}
+
+void USequenceHUDBase::IntoDream()
+{
+	BackgroundImage = BackgroundD;
+}
+
+void USequenceHUDBase::OutDream()
+{
+	BackgroundImage = BackgroundT;
 }

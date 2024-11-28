@@ -4,6 +4,7 @@
 #include "GameFramework/GameMode.h"
 #include "LevelGameModeBase.generated.h"
 
+struct FInteractiveData;
 class UStartGameHUDBase;
 class AFirstPersonPlayerBase;
 struct FSubtitleSetting;
@@ -16,6 +17,8 @@ struct FRoomConfig
 
 	UPROPERTY(EditDefaultsOnly)
 	FVector ThirdPos;
+	UPROPERTY(EditDefaultsOnly)
+	FRotator ThirdRotation{-90, 180, 0};
 	UPROPERTY(EditDefaultsOnly)
 	float Width;
 	UPROPERTY(EditDefaultsOnly)
@@ -71,7 +74,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ContinueGame();
 
-	FVector GetCurrentRoomPos(const FVector& PlayerPos) const;
+	const FRoomConfig& GetCurrentRoomPos(const FVector& PlayerPos) const;
 
 	void ChangePlayerPos(const FVector& PlayerPos);
 
@@ -84,7 +87,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 
+	UFUNCTION(BlueprintCallable)
 	void ShowLevelTitle();
+	UFUNCTION(BlueprintCallable)
+	float ShowTitle(const FString& InText, const TArray<FSubtitleSetting>& TextArr, bool bInPause = false);
 	void StartGameDialog();
 	void StartGame();
 
@@ -109,6 +115,8 @@ protected:
 	/* 本关开始前对话 */
 	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
 	TArray<FSubtitleSetting> SubtitlesBeforeStartGame;
+
+	TArray<FSubtitleSetting> ArrToShow;
 
 	/* 本关倒计时 */
 	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
@@ -135,11 +143,16 @@ protected:
 	float DreamMaxTime{1800.f};
 
 	/* 当前已经获取到的秒数 */
+	UPROPERTY(BlueprintReadOnly)
 	float CurrentSecondsCount{0.f};
+
+	UPROPERTY(BlueprintReadOnly)
 	/* 当前已经进入梦境的时长 */
 	float CurrentDreamTime{0.f};
 
 private:
+	FTimerHandle SubtitleTimerHandle;
+
 	UPROPERTY(Transient)
 	AFirstPersonPlayerBase* CurrentPlayer;
 

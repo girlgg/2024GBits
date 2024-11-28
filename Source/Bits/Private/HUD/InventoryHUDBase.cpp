@@ -12,7 +12,7 @@ void UInventoryHUDBase::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 	Super::NativeTick(MyGeometry, InDeltaTime);
 }
 
-void UInventoryHUDBase::UpdateItem(FString& InItemName, UTexture2D* InItemIcon, int32 InNum)
+void UInventoryHUDBase::UpdateItem(const FString& InItemName, UTexture2D* InItemIcon, int32 InNum)
 {
 	UInventoryItemHUDBase* ItemHUD = nullptr;
 	if (InNum <= 0)
@@ -99,4 +99,26 @@ FString UInventoryHUDBase::GetSelectedItemName()
 FText UInventoryHUDBase::GetSelectedItemNameText()
 {
 	return FText::FromString(GetSelectedItemName());
+}
+
+void UInventoryHUDBase::IntoDream()
+{
+	for (auto& Item : ItemsList)
+	{
+		if (Item.Value)
+		{
+			Item.Value->IntoDream();
+		}
+	}
+}
+
+void UInventoryHUDBase::OutDream()
+{
+	for (auto& Item : ItemsList)
+	{
+		if (Item.Value)
+		{
+			Item.Value->OutDream();
+		}
+	}
 }

@@ -12,14 +12,18 @@ class BITS_API UInteractionWidgetComponent : public UWidgetComponent
 public:
 	UInteractionWidgetComponent();
 
+	void ShowPrompt();
+	void HidePrompt();
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 protected:
 	virtual void BeginPlay() override;
-
-public:
 
 	UPROPERTY(Transient)
 	class UItemInteractionHUDBase* CurrentWidget;
 
-protected:
 	float DisplayFromRange{0.f};
+
+	int32 CurrentIdx{0};
 };

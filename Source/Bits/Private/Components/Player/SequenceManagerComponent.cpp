@@ -24,6 +24,22 @@ void USequenceManagerComponent::PlaySubtitles(const TArray<FSubtitleSetting>& Su
 	}
 }
 
+void USequenceManagerComponent::IntoDream()
+{
+	if (SequenceHUD)
+	{
+		SequenceHUD->IntoDream();
+	}
+}
+
+
+void USequenceManagerComponent::OutDream()
+{
+	if (SequenceHUD)
+	{
+		SequenceHUD->OutDream();
+	}
+}
 
 void USequenceManagerComponent::BeginPlay()
 {

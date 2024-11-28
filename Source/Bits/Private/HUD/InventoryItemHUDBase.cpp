@@ -12,3 +12,13 @@ void UInventoryItemHUDBase::SetIcon(UTexture2D* Icon)
 {
 	ItemImage->SetBrushFromTexture(Icon);
 }
+
+void UInventoryItemHUDBase::IntoDream()
+{
+	BackgroundImage = BackgroundD;
+}
+
+void UInventoryItemHUDBase::OutDream()
+{
+	BackgroundImage = BackgroundT;
+}

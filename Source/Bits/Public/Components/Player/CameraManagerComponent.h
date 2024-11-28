@@ -17,6 +17,9 @@ public:
 	UCameraManagerComponent();
 	void StartGame();
 
+	void ShowCameraHUD();
+	void HideCameraHUD();
+
 	void CreateCameraHUD();
 	void DestroyCameraHUD();
 

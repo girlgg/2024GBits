@@ -3,7 +3,7 @@
 #include "Animation/WidgetAnimation.h"
 #include "Components/TextBlock.h"
 
-void UStartGameHUDBase::UpdateTitleName(FString& InTitle)
+void UStartGameHUDBase::UpdateTitleName(const FString& InTitle)
 {
 	LevelTitle->SetText(FText::FromString(InTitle));
 }

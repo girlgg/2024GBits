@@ -73,7 +73,7 @@ struct FInteractionMethods
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FSubtitleSetting> SayTextPages;
 
-	/* 本次进入睡眠的时间，进入睡眠物体专用 */
+	/* 本次进入睡眠的时间（小时），进入睡眠物体专用 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DreamGetTime;
 };
@@ -115,6 +115,9 @@ class BITS_API AInteractiveItemBase : public AActor
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAllowInteract{true};
+
 	AInteractiveItemBase();
 
 	UFUNCTION(BlueprintImplementableEvent)
@@ -122,6 +125,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void K2_NotFound();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void FailToPickup();
 
 protected:
 	virtual void BeginPlay() override;
@@ -146,16 +152,16 @@ public:
 
 	void Outline(bool bEnable);
 
-	/* 交互为门时，下一个房间的位置，该坐标在下一个房间即可，会自动找合适的位置 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Door")
-	FVector NextRoomPos;
-	
 	/* 是否为凝视交互（鼠标或视角中心悬停），否则为点按交互 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
 	bool bIsGazeInteraction{false};
 	/* 为凝视交互时，凝视触发事件时长 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
 	float GazeDuration{1.f};
+
+	/* 没有找到物品时的话 */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FSubtitleSetting> NotFoundPages;
 
 protected:
 	UFUNCTION()
@@ -184,4 +190,7 @@ protected:
 	/* 离开梦境后的网格 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSoftObjectPtr<UStaticMesh> OutDreamMesh;
+
+private:
+	bool bShowOutline{false};
 };

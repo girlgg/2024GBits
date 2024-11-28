@@ -22,6 +22,22 @@ void ACameraManagerBase::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 }
 
+void ACameraManagerBase::ShowCameraHUD()
+{
+	if (GeneralHUD)
+	{
+		GeneralHUD->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void ACameraManagerBase::HideCameraHUD()
+{
+	if (GeneralHUD)
+	{
+		GeneralHUD->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
 void ACameraManagerBase::CreateCameraHUD()
 {
 	if (GeneralHUD)
