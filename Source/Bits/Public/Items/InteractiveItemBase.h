@@ -5,6 +5,7 @@
 #include "Common/SubtitleSetting.h"
 #include "InteractiveItemBase.generated.h"
 
+class UCISInteractionObjectComponent;
 class UTextBlock;
 class UInteractionWidgetComponent;
 class USphereComponent;
@@ -129,6 +130,13 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void FailToPickup();
 
+	void InteractWith();
+	/* 子类C++继承 */
+	virtual void ExecInteractWith();
+	/* 子蓝图继承 */
+	UFUNCTION(BlueprintImplementableEvent)
+	void K2_InteractWith();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -160,8 +168,8 @@ public:
 	float GazeDuration{1.f};
 
 	/* 没有找到物品时的话 */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TArray<FSubtitleSetting> NotFoundPages;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FSubtitleSetting> NotFoundPages;
 
 protected:
 	UFUNCTION()

@@ -7,6 +7,7 @@
 UInteractionWidgetComponent::UInteractionWidgetComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+	
 }
 
 

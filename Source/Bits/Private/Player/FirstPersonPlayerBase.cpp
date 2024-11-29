@@ -2,6 +2,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "Common/GameplayFunctinos.h"
+#include "Components/SphereComponent.h"
 #include "Components/Player/CameraManagerComponent.h"
 #include "Components/Player/InteractionManagerComponent.h"
 #include "Components/Player/InventoryManagerComponent.h"
@@ -19,6 +20,10 @@ AFirstPersonPlayerBase::AFirstPersonPlayerBase()
 	InteractionManager = CreateDefaultSubobject<UInteractionManagerComponent>(TEXT("InteractionManager"));
 	InventoryManager = CreateDefaultSubobject<UInventoryManagerComponent>(TEXT("InventoryManager"));
 	SequenceManager = CreateDefaultSubobject<USequenceManagerComponent>(TEXT("SequenceManager"));
+
+	FirstTriggerCollision = CreateDefaultSubobject<USphereComponent>(TEXT("FirstTriggerCollision"));
+	FirstTriggerCollision->SetSphereRadius(400.f);
+	FirstTriggerCollision->SetupAttachment(RootComponent);
 }
 
 void AFirstPersonPlayerBase::StartGame()
@@ -28,9 +33,15 @@ void AFirstPersonPlayerBase::StartGame()
 	ChangeToFirstPerson();
 }
 
+void AFirstPersonPlayerBase::OnInteractedInput(FInteractiveData TargetInteractionActorData)
+{
+}
+
 void AFirstPersonPlayerBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	InteractionManager->OnInteracted.AddDynamic(this, &ThisClass::OnInteractedInput);
 }
 
 void AFirstPersonPlayerBase::Move(const FInputActionValue& Value)
@@ -67,6 +78,15 @@ void AFirstPersonPlayerBase::Interact(const FInputActionValue& Value)
 	{
 		InteractionManager->ClickInteraction();
 	}
+	InteractionManager->DialogInputReply(false, 0);
+}
+
+void AFirstPersonPlayerBase::SubInteract(const FInputActionValue& Value)
+{
+	if (!bIsPause)
+	{
+	}
+	InteractionManager->DialogInputReply(false, 1);
 }
 
 void AFirstPersonPlayerBase::Back(const FInputActionValue& Value)
@@ -74,7 +94,7 @@ void AFirstPersonPlayerBase::Back(const FInputActionValue& Value)
 	if (!bIsPause)
 	{
 		InteractionManager->CloseInspect();
-		UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
+		InteractionManager->DialogInputReply(true);
 	}
 }
 
@@ -203,6 +223,7 @@ void AFirstPersonPlayerBase::SetupPlayerInputComponent(UInputComponent* PlayerIn
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ThisClass::Look);
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ThisClass::Interact);
+		EnhancedInputComponent->BindAction(SubInteractAction, ETriggerEvent::Started, this, &ThisClass::SubInteract);
 		EnhancedInputComponent->BindAction(BackAction, ETriggerEvent::Started, this, &ThisClass::Back);
 		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Started, this, &ThisClass::Pause);
 		EnhancedInputComponent->BindAction(NavigateAction, ETriggerEvent::Started, this, &ThisClass::Navigate);

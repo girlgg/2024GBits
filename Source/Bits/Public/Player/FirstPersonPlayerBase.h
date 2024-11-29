@@ -5,6 +5,9 @@
 #include "GameFramework/Character.h"
 #include "FirstPersonPlayerBase.generated.h"
 
+class USphereComponent;
+class UCISCharacterInteractionComponent;
+struct FInteractiveData;
 class UPauseMenuHUDBase;
 class USequenceManagerComponent;
 class UInputMappingContext;
@@ -35,7 +38,7 @@ public:
 	void OutDream();
 
 	void BePause();
-    void OutPause();
+	void OutPause();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UCameraManagerComponent> CameraManager;
@@ -45,9 +48,14 @@ public:
 	TObjectPtr<UInventoryManagerComponent> InventoryManager;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<USequenceManagerComponent> SequenceManager;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<USphereComponent> FirstTriggerCollision;
 
 	UPROPERTY(BlueprintReadWrite)
 	EViewMode CurrentViewMode{EViewMode::FirstPerson};
+
+	UFUNCTION()
+	void OnInteractedInput(FInteractiveData TargetInteractionActorData);
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,6 +63,7 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
+	void SubInteract(const FInputActionValue& Value);
 	void Back(const FInputActionValue& Value);
 	void Pause(const FInputActionValue& Value);
 	void Navigate(const FInputActionValue& Value);
@@ -68,6 +77,8 @@ protected:
 	UInputAction* MoveAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
 	UInputAction* InteractAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
+	UInputAction* SubInteractAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
 	UInputAction* BackAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")

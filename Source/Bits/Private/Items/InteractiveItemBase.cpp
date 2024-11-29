@@ -2,7 +2,6 @@
 
 #include "Components/SphereComponent.h"
 #include "Components/Items/InteractionWidgetComponent.h"
-#include "HUD/ItemInteractionHUDBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/LevelGameModeBase.h"
 
@@ -29,6 +28,16 @@ AInteractiveItemBase::AInteractiveItemBase()
 
 	UICollision->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnPlayerInUI);
 	UICollision->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnPlayerOutUI);
+}
+
+void AInteractiveItemBase::InteractWith()
+{
+	ExecInteractWith();
+	K2_InteractWith();
+}
+
+void AInteractiveItemBase::ExecInteractWith()
+{
 }
 
 void AInteractiveItemBase::BeginPlay()

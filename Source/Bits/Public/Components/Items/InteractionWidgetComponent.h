@@ -4,6 +4,8 @@
 #include "Components/WidgetComponent.h"
 #include "InteractionWidgetComponent.generated.h"
 
+class UCISInteractionObjectComponent;
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BITS_API UInteractionWidgetComponent : public UWidgetComponent
 {
@@ -15,7 +17,8 @@ public:
 	void ShowPrompt();
 	void HidePrompt();
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	virtual void BeginPlay() override;

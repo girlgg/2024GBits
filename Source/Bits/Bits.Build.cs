@@ -9,7 +9,9 @@ public class Bits : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new string[]
-			{ "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "EnhancedInput" });
+		{
+			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "EnhancedInput"
+		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 

@@ -5,6 +5,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GameplayFunctinos.generated.h"
 
+class AFirstPersonPlayerBase;
 struct FSubtitleSetting;
 class UInputMappingContext;
 
@@ -30,4 +31,6 @@ public:
 	static void SetNextLevelName(const UObject* WorldContextObject, FString LevelName);
 	UFUNCTION(BlueprintCallable)
 	static void LevelTravel(const UObject* WorldContextObject);
+	UFUNCTION(BlueprintCallable)
+	static AFirstPersonPlayerBase* GetPlayer(const UObject* WorldContextObject);
 };

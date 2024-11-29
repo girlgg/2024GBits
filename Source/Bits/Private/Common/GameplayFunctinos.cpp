@@ -11,6 +11,7 @@
 class UEnhancedInputLocalPlayerSubsystem;
 
 static UInputMappingContext* SavedMappings = nullptr;
+static UInputMappingContext* WantToSavedMappings = nullptr;
 
 void UGameplayFunctinos::UpdateInputMappingContext(const UObject* WorldContextObject,
                                                    UInputMappingContext* InInputMapping)
@@ -23,8 +24,10 @@ void UGameplayFunctinos::UpdateInputMappingContext(const UObject* WorldContextOb
 				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 			{
 				Subsystem->ClearAllMappings();
-				SavedMappings = InInputMapping;
 				Subsystem->AddMappingContext(InInputMapping, 0);
+				
+				SavedMappings = WantToSavedMappings;
+				WantToSavedMappings = InInputMapping;
 			}
 		}
 	}
@@ -56,6 +59,8 @@ void UGameplayFunctinos::RestoreMappingContext(const UObject* WorldContextObject
 			{
 				Subsystem->ClearAllMappings();
 				Subsystem->AddMappingContext(SavedMappings, 0);
+				
+				Swap(SavedMappings, WantToSavedMappings);
 			}
 		}
 	}
@@ -110,4 +115,11 @@ void UGameplayFunctinos::LevelTravel(const UObject* WorldContextObject)
 		const FString LevelName = GameInstance->LevelNameToLoad;
 		UGameplayStatics::OpenLevel(World, *LevelName);
 	}
+}
+
+AFirstPersonPlayerBase* UGameplayFunctinos::GetPlayer(const UObject* WorldContextObject)
+{
+	AFirstPersonPlayerBase* Player =
+		Cast<AFirstPersonPlayerBase>(UGameplayStatics::GetPlayerPawn(WorldContextObject, 0));
+	return Player;
 }

@@ -2,8 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Items/InteractiveItemBase.h"
 #include "InteractionManagerComponent.generated.h"
 
+class AItemWithResponse;
 class UInputMappingContext;
 class UInspectHUDBase;
 class AFirstPersonPlayerBase;
@@ -17,6 +19,9 @@ enum class EInteractionState : uint8
 	Max
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteracted, FInteractiveData, TargetInteractionActorData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogueReply, FString, ReplyOption);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BITS_API UInteractionManagerComponent : public UActorComponent
 {
@@ -25,6 +30,10 @@ class BITS_API UInteractionManagerComponent : public UActorComponent
 public:
 	UInteractionManagerComponent();
 
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION(BlueprintCallable)
 	bool CanInteract();
 	void ClickInteraction();
 	virtual void RootInteraction();
@@ -33,12 +42,20 @@ public:
 
 	void Navigate(float Direction);
 
+	void DialogInputReply(bool bInEnd = false, int32 Option = 0);
+	void InitiateConnersation(AItemWithResponse* ItemWithResponse, bool bStopCondition);
+
+	FOnInteracted OnInteracted;
+	FOnDialogueReply OnDialogueReply;
+
+	UPROPERTY(Transient)
+	AItemWithResponse* ResponseItem;
+
 protected:
 	virtual void BeginPlay() override;
 
-	void CheckInteraction();
-	UFUNCTION(BlueprintCallable)
-	virtual bool AllowInteraction();
+	void CheckInteraction(float DeltaTime);
+
 	void InspectUI();
 	bool HasItemInteraction();
 
@@ -47,18 +64,16 @@ protected:
 
 	void DoorInteraction();
 
+	UFUNCTION(BlueprintCallable)
 	void IntoDream(float InDreamTime);
 	void OutDream();
+
+	void InspectFromData();
 
 	AFirstPersonPlayerBase* GetPlayer();
 
 	UPROPERTY(EditDefaultsOnly)
-	float InteractionCheckTime{.1f};
-	UPROPERTY(EditDefaultsOnly)
 	float MaxRayDistance{300.f};
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bAllowInteraction{true};
 
 	UPROPERTY(BlueprintReadOnly)
 	AInteractiveItemBase* InteractiveItem;
@@ -76,8 +91,6 @@ protected:
 	UInputMappingContext* InspectMapping;
 
 private:
-	FTimerHandle InteractCheckTimer;
-
 	UPROPERTY(Transient)
 	AFirstPersonPlayerBase* CurrentPlayer{nullptr};
 
@@ -90,4 +103,5 @@ private:
 public:
 	bool bUseMouseLocation{false};
 	bool bPause{false};
+	bool bAllowInteraction{false};
 };

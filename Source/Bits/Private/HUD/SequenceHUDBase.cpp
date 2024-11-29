@@ -1,7 +1,11 @@
 ﻿#include "HUD/SequenceHUDBase.h"
 
+#include "Common/GameplayFunctinos.h"
 #include "Common/SubtitleSetting.h"
 #include "Components/TextBlock.h"
+#include "Components/Player/SequenceManagerComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/FirstPersonPlayerBase.h"
 
 void USequenceHUDBase::NativeConstruct()
 {
@@ -32,19 +36,22 @@ void USequenceHUDBase::UpdateSubtitles()
 		CurrentText = Subtitles[CurrentSubtitleIndex].SubtitleText;
 		CurrentDelay = Subtitles[CurrentSubtitleIndex].SubtitleDelay;
 
-		CurrentTextIdx = 0;
-		TextToShow = FString(1, &CurrentText[CurrentTextIdx++]);
-		CurrentTextDelay = CurrentDelay / CurrentText.Len() / 2.;
+		if (!CurrentText.IsEmpty())
+		{
+			CurrentTextIdx = 0;
+			TextToShow = FString(1, &CurrentText[CurrentTextIdx++]);
+			CurrentTextDelay = CurrentDelay / CurrentText.Len() / 2.;
 
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::PlaySubtitle, CurrentDelay, false);
-		GetWorld()->GetTimerManager().SetTimer(TextTimerHandle, this, &ThisClass::UpdateText, CurrentTextDelay, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ThisClass::PlaySubtitle, CurrentDelay, false);
+			GetWorld()->GetTimerManager().SetTimer(TextTimerHandle, this, &ThisClass::UpdateText, CurrentTextDelay,
+			                                       false);
+			return;
+		}
 	}
-	else
-	{
-		Subtitles.Empty();
-		CurrentSubtitleIndex = 0;
-		SetVisibility(ESlateVisibility::Hidden);
-	}
+	Subtitles.Empty();
+	CurrentSubtitleIndex = 0;
+	SetVisibility(ESlateVisibility::Hidden);
+	UGameplayFunctinos::GetPlayer(GetWorld())->SequenceManager->OnSubtitlesFinished.ExecuteIfBound();
 }
 
 void USequenceHUDBase::UpdateText()

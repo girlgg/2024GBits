@@ -5,23 +5,33 @@
 #include "Components/Player/SequenceManagerComponent.h"
 #include "HUD/InspectHUDBase.h"
 #include "Items/InteractiveItemBase.h"
+#include "Items/ItemWithResponse.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/FirstPersonPlayerBase.h"
 #include "Player/LevelGameModeBase.h"
 
 UInteractionManagerComponent::UInteractionManagerComponent()
 {
+	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UInteractionManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+                                                 FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	CheckInteraction(DeltaTime);
 }
 
 bool UInteractionManagerComponent::CanInteract()
 {
 	return InteractiveItem != nullptr && LastInteractiveItem != nullptr &&
-		InteractiveItem->bAllowInteract && !bPause;
+		InteractiveItem->bAllowInteract && !bPause && bAllowInteraction && !ResponseItem;
 }
 
 void UInteractionManagerComponent::ClickInteraction()
 {
-	if (InteractiveItem && !InteractiveItem->bIsGazeInteraction && InteractiveItem->bAllowInteract)
+	if (CanInteract())
 	{
 		RootInteraction();
 	}
@@ -33,9 +43,13 @@ void UInteractionManagerComponent::RootInteraction()
 
 	const FInteractiveData& TargetInteractiveData = InteractiveItem->InteractiveData;
 
+	// TODO：播放声音
+	OnInteracted.Broadcast(TargetInteractiveData);
+
 	switch (TargetInteractiveData.InteractionMethod.InteractionMethod)
 	{
 	case EInteractionMethod::None:
+		InteractiveItem->InteractWith();
 		break;
 	case EInteractionMethod::Pickup:
 		if (GetPlayer())
@@ -47,22 +61,8 @@ void UInteractionManagerComponent::RootInteraction()
 		}
 		break;
 	case EInteractionMethod::Inspect:
-		switch (TargetInteractiveData.InteractionMethod.InspectMethod)
-		{
-		case EInspectMethod::None:
-			break;
-		case EInspectMethod::Readable:
-			ReadPaper();
-			HasItemInteraction();
-			break;
-		case EInspectMethod::Say:
-			MakeSay();
-			InteractiveItem->bAllowInteract = false;
-			HasItemInteraction();
-			break;
-		case EInspectMethod::Max:
-			break;
-		}
+		InspectFromData();
+		InteractiveItem->InteractWith();
 		break;
 	case EInteractionMethod::HasItem:
 		HasItemInteraction();
@@ -76,6 +76,7 @@ void UInteractionManagerComponent::RootInteraction()
 			}
 			IntoDream(TargetInteractiveData.InteractionMethod.DreamGetTime);
 			InteractiveItem->bAllowInteract = false;
+			InteractiveItem->InteractWith();
 		}
 		break;
 	case EInteractionMethod::OutDream:
@@ -102,6 +103,7 @@ void UInteractionManagerComponent::CloseInspect()
 	if (InspectHUD)
 	{
 		InspectHUD->RemoveFromParent();
+		UGameplayFunctinos::RestoreMappingContext(GetWorld());
 	}
 	CurrentInspectState = EInteractionState::None;
 }
@@ -114,25 +116,56 @@ void UInteractionManagerComponent::Navigate(float Direction)
 	}
 }
 
+void UInteractionManagerComponent::DialogInputReply(bool bInEnd, int32 Option)
+{
+	if (ResponseItem && ResponseItem->bAllowResponse)
+	{
+		if (!bInEnd)
+		{
+			ResponseItem->InputReply(Option);
+		}
+		else
+		{
+			ResponseItem->InputEndRelies();
+			ResponseItem = nullptr;
+		}
+	}
+}
+
+void UInteractionManagerComponent::InitiateConnersation(AItemWithResponse* ItemWithResponse, bool bStopCondition)
+{
+	if (!bStopCondition)
+	{
+		ResponseItem = ItemWithResponse;
+	}
+	else
+	{
+		ResponseItem = nullptr;
+	}
+}
+
 void UInteractionManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GetWorld()->GetTimerManager().SetTimer(InteractCheckTimer,
-	                                       this,
-	                                       &ThisClass::CheckInteraction, InteractionCheckTime,
-	                                       false);
+	bAllowInteraction = true;
 }
 
-void UInteractionManagerComponent::CheckInteraction()
+void UInteractionManagerComponent::CheckInteraction(float DeltaTime)
 {
+	// 记录上一个交互的物品
 	LastInteractiveItem = InteractiveItem;
-
+	// 物品禁止交互则禁用高亮
 	if (InteractiveItem && !InteractiveItem->bAllowInteract)
 	{
 		InteractiveItem->Outline(false);
 	}
 
+	if (bPause || !bAllowInteraction)
+	{
+		return;
+	}
+	// 处理命中的物体的高亮
 	auto ProcessHitResult = [&](AActor* HitActor)
 	{
 		if (HitActor)
@@ -155,9 +188,9 @@ void UInteractionManagerComponent::CheckInteraction()
 	};
 
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	if (AllowInteraction() && PlayerController)
+	if (PlayerController)
 	{
-		if (bUseMouseLocation)
+		if (bUseMouseLocation) // 使用鼠标交互
 		{
 			FHitResult HitResult;
 			FCollisionQueryParams Params;
@@ -178,7 +211,7 @@ void UInteractionManagerComponent::CheckInteraction()
 				}
 			}
 		}
-		else
+		else // 使用视角交互
 		{
 			FVector CameraLocation;
 			FRotator CameraRotation;
@@ -203,13 +236,14 @@ void UInteractionManagerComponent::CheckInteraction()
 		}
 	}
 
+	// 凝视交互
 	if (LastInteractiveItem && LastInteractiveItem->bIsGazeInteraction)
 	{
 		if (LastInteractiveItem == InteractiveItem)
 		{
 			if (!bIsGazeInteraction)
 			{
-				CurrentGazeTime += InteractionCheckTime;
+				CurrentGazeTime += DeltaTime;
 				if (CurrentGazeTime > InteractiveItem->GazeDuration)
 				{
 					CurrentGazeTime = 0.f;
@@ -224,17 +258,6 @@ void UInteractionManagerComponent::CheckInteraction()
 			CurrentGazeTime = 0.f;
 		}
 	}
-
-	GetWorld()->GetTimerManager().SetTimer(InteractCheckTimer,
-	                                       this,
-	                                       &ThisClass::CheckInteraction,
-	                                       InteractionCheckTime,
-	                                       false);
-}
-
-bool UInteractionManagerComponent::AllowInteraction()
-{
-	return bAllowInteraction;
 }
 
 void UInteractionManagerComponent::InspectUI()
@@ -348,6 +371,25 @@ void UInteractionManagerComponent::OutDream()
 	if (GetPlayer())
 	{
 		GetPlayer()->OutDream();
+	}
+}
+
+void UInteractionManagerComponent::InspectFromData()
+{
+	switch (InteractiveItem->InteractiveData.InteractionMethod.InspectMethod)
+	{
+	case EInspectMethod::None:
+		break;
+	case EInspectMethod::Readable:
+		ReadPaper();
+		HasItemInteraction();
+		break;
+	case EInspectMethod::Say:
+		MakeSay();
+		HasItemInteraction();
+		break;
+	case EInspectMethod::Max:
+		break;
 	}
 }
 

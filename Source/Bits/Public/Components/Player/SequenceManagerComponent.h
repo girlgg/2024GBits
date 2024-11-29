@@ -7,6 +7,8 @@
 struct FSubtitleSetting;
 class USequenceHUDBase;
 
+DECLARE_DELEGATE(FOnSubtitlesFinished);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BITS_API USequenceManagerComponent : public UActorComponent
 {
@@ -20,6 +22,8 @@ public:
 
 	void IntoDream();
 	void OutDream();
+
+	FOnSubtitlesFinished OnSubtitlesFinished;
 
 protected:
 	virtual void BeginPlay() override;
