@@ -12,15 +12,15 @@ void UInventoryHUDBase::NativeTick(const FGeometry& MyGeometry, float InDeltaTim
 	Super::NativeTick(MyGeometry, InDeltaTime);
 }
 
-void UInventoryHUDBase::UpdateItem(const FString& InItemName, UTexture2D* InItemIcon, int32 InNum)
+void UInventoryHUDBase::UpdateItem(const FString& InDisplayItemName, const FString& InItemName, UTexture2D* InItemIcon,
+                                   int32 InNum)
 {
-	UInventoryItemHUDBase* ItemHUD = nullptr;
 	if (InNum <= 0)
 	{
 		if (ItemsList.Contains(InItemName))
 		{
-			ItemHUD = *ItemsList.Find(InItemName);
-			ItemHUD->RemoveFromParent();
+			const FDisplayHUD* ItemHUD = ItemsList.Find(InItemName);
+			ItemHUD->HUD->RemoveFromParent();
 			ItemsList.Remove(InItemName);
 		}
 		return;
@@ -28,28 +28,22 @@ void UInventoryHUDBase::UpdateItem(const FString& InItemName, UTexture2D* InItem
 
 	if (!ItemsList.Contains(InItemName) && IsValid(InventoryItemSlots) && IsValid(ItemHUDClass))
 	{
-		ItemHUD = CreateWidget<UInventoryItemHUDBase>(GetWorld(), ItemHUDClass);
-		if (ItemHUD)
+		FDisplayHUD ItemDisplayHUD;
+		ItemDisplayHUD.HUD = CreateWidget<UInventoryItemHUDBase>(GetWorld(), ItemHUDClass);
+		ItemDisplayHUD.HUDName = InDisplayItemName;
+		if (ItemDisplayHUD.HUD)
 		{
-			if (ItemsList.IsEmpty())
-			{
-				SelectedItemSlot = ItemHUD;
-			}
-			ItemsList.Add(InItemName, ItemHUD);
-			InventoryItemSlots->AddChildToHorizontalBox(ItemHUD);
+			ItemsList.Add(InItemName, ItemDisplayHUD);
+			InventoryItemSlots->AddChildToHorizontalBox(ItemDisplayHUD.HUD);
 		}
-		ItemHUD->SetPadding(FMargin(2, 0, 2, 0));
+		ItemDisplayHUD.HUD->SetPadding(FMargin(2, 0, 2, 0));
 	}
 
-	ItemHUD = ItemsList.FindOrAdd(InItemName);
-
-	if (ItemHUD)
+	const FDisplayHUD& ItemHUD = ItemsList.FindOrAdd(InItemName);
+	ItemHUD.HUD->SetNum(InNum);
+	if (InItemIcon)
 	{
-		ItemHUD->SetNum(InNum);
-		if (InItemIcon)
-		{
-			ItemHUD->SetIcon(InItemIcon);
-		}
+		ItemHUD.HUD->SetIcon(InItemIcon);
 	}
 }
 
@@ -65,33 +59,45 @@ void UInventoryHUDBase::Navigate(float Direction)
 	}
 	SelectedItemSlotIndex = FMath::Clamp(SelectedItemSlotIndex, 0, ItemsList.Num() - 1);
 
-	const TArray<UWidget*>& AllItemHUD = InventoryItemSlots->GetAllChildren();
-	for (int32 Index = 0; Index < AllItemHUD.Num(); Index++)
+	int32 TmpIdx = 0;
+	for (auto& Item : ItemsList)
 	{
-		UInventoryItemHUDBase* HUD = Cast<UInventoryItemHUDBase>(AllItemHUD[Index]);
-		if (SelectedItemSlotIndex == Index)
+		if (SelectedItemSlotIndex == TmpIdx)
 		{
-			HUD->bIsSelected = true;
-			SelectedItemSlot = HUD;
+			Item.Value.HUD->bIsSelected = true;
 		}
 		else
 		{
-			HUD->bIsSelected = false;
+			Item.Value.HUD->bIsSelected = false;
 		}
+		++TmpIdx;
 	}
 }
 
 FString UInventoryHUDBase::GetSelectedItemName()
 {
-	if (IsValid(SelectedItemSlot))
+	int32 TmpIdx = 0;
+	for (auto& Item : ItemsList)
 	{
-		for (auto& Item : ItemsList)
+		if (SelectedItemSlotIndex == TmpIdx)
 		{
-			if (Item.Value == SelectedItemSlot)
-			{
-				return Item.Key;
-			}
+			return Item.Value.HUDName;
 		}
+		++TmpIdx;
+	}
+	return FString();
+}
+
+FString UInventoryHUDBase::GetSelectedItemObjName()
+{
+	int32 TmpIdx = 0;
+	for (auto& Item : ItemsList)
+	{
+		if (SelectedItemSlotIndex == TmpIdx)
+		{
+			return Item.Key;
+		}
+		++TmpIdx;
 	}
 	return FString();
 }
@@ -105,9 +111,9 @@ void UInventoryHUDBase::IntoDream()
 {
 	for (auto& Item : ItemsList)
 	{
-		if (Item.Value)
+		if (Item.Value.HUD)
 		{
-			Item.Value->IntoDream();
+			Item.Value.HUD->IntoDream();
 		}
 	}
 }
@@ -116,9 +122,9 @@ void UInventoryHUDBase::OutDream()
 {
 	for (auto& Item : ItemsList)
 	{
-		if (Item.Value)
+		if (Item.Value.HUD)
 		{
-			Item.Value->OutDream();
+			Item.Value.HUD->OutDream();
 		}
 	}
 }

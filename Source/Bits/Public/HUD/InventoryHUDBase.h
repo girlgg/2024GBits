@@ -17,12 +17,14 @@ class BITS_API UInventoryHUDBase : public UUserWidget
 public:
 	// 偷懒，直接写在Tick中，每帧更新物品
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-	void UpdateItem(const FString& InItemName, UTexture2D* InItemIcon, int32 InNum);
+	void UpdateItem(const FString& InDisplayItemName, const FString& InItemName, UTexture2D* InItemIcon, int32 InNum);
 
 	void Navigate(float Direction);
 
 	UFUNCTION(BlueprintCallable)
 	FString GetSelectedItemName();
+	UFUNCTION(BlueprintCallable)
+	FString GetSelectedItemObjName();
 	UFUNCTION(BlueprintCallable)
 	FText GetSelectedItemNameText();
 
@@ -36,8 +38,17 @@ protected:
 	TSubclassOf<UInventoryItemHUDBase> ItemHUDClass;
 
 private:
-	TMap<FString, UInventoryItemHUDBase*> ItemsList;
+	struct FDisplayHUD
+	{
+		FString HUDName;
+		UInventoryItemHUDBase* HUD;
+
+		bool operator==(const FDisplayHUD& other) const
+		{
+			return HUD == other.HUD;
+		}
+	};
+
+	TMap<FString, FDisplayHUD> ItemsList;
 	int32 SelectedItemSlotIndex{0};
-	UPROPERTY(Transient)
-	UInventoryItemHUDBase* SelectedItemSlot{nullptr};
 };

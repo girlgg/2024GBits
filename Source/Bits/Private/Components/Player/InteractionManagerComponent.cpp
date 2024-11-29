@@ -15,7 +15,8 @@ UInteractionManagerComponent::UInteractionManagerComponent()
 
 bool UInteractionManagerComponent::CanInteract()
 {
-	return InteractiveItem != nullptr && LastInteractiveItem != nullptr && InteractiveItem->bAllowInteract;
+	return InteractiveItem != nullptr && LastInteractiveItem != nullptr &&
+		InteractiveItem->bAllowInteract && !bPause;
 }
 
 void UInteractionManagerComponent::ClickInteraction()
@@ -30,7 +31,7 @@ void UInteractionManagerComponent::RootInteraction()
 {
 	if (!CanInteract()) return;
 
-	FInteractiveData& TargetInteractiveData = InteractiveItem->InteractiveData;
+	const FInteractiveData& TargetInteractiveData = InteractiveItem->InteractiveData;
 
 	switch (TargetInteractiveData.InteractionMethod.InteractionMethod)
 	{
@@ -64,28 +65,29 @@ void UInteractionManagerComponent::RootInteraction()
 		}
 		break;
 	case EInteractionMethod::HasItem:
+		HasItemInteraction();
+		break;
+	case EInteractionMethod::IntoDream:
 		if (HasItemInteraction())
 		{
+			if (GetPlayer())
+			{
+				GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem);
+			}
+			IntoDream(TargetInteractiveData.InteractionMethod.DreamGetTime);
 			InteractiveItem->bAllowInteract = false;
 		}
 		break;
-	case EInteractionMethod::IntoDream:
-		HasItemInteraction();
-		if (GetPlayer())
-		{
-			GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem);
-		}
-		IntoDream(TargetInteractiveData.InteractionMethod.DreamGetTime);
-		InteractiveItem->bAllowInteract = false;
-		break;
 	case EInteractionMethod::OutDream:
-		HasItemInteraction();
-		if (GetPlayer())
+		if (HasItemInteraction())
 		{
-			GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem);
+			if (GetPlayer())
+			{
+				GetPlayer()->InventoryManager->AddItemToInventory(TargetInteractiveData, InteractiveItem);
+			}
+			OutDream();
+			InteractiveItem->bAllowInteract = false;
 		}
-		OutDream();
-		InteractiveItem->bAllowInteract = false;
 		break;
 	case EInteractionMethod::Door:
 		DoorInteraction();

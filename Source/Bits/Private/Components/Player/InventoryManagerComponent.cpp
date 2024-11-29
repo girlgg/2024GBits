@@ -32,7 +32,8 @@ bool UInventoryManagerComponent::AddItemToInventory(const FInteractiveData& InIn
 	}
 	if (IsValid(InventoryHUD))
 	{
-		InventoryHUD->UpdateItem(InInteractiveData.ObjectName, InInteractiveData.InteractionMethod.InventoryIcon, Item);
+		InventoryHUD->UpdateItem(InInteractiveData.InteractionMethod.PromptText, InInteractiveData.ObjectName,
+		                         InInteractiveData.InteractionMethod.InventoryIcon, Item);
 	}
 	return true;
 }
@@ -66,7 +67,9 @@ void UInventoryManagerComponent::ReduceItemByName(FString& InName)
 			}
 			if (IsValid(InventoryHUD))
 			{
-				InventoryHUD->UpdateItem(Item.Key.ObjectName, Item.Key.InteractionMethod.InventoryIcon, Item.Value);
+				InventoryHUD->UpdateItem(Item.Key.InteractionMethod.PromptText,
+				                         Item.Key.ObjectName,
+				                         Item.Key.InteractionMethod.InventoryIcon, Item.Value);
 			}
 		}
 	}
@@ -76,7 +79,7 @@ FString UInventoryManagerComponent::GetSelectedItemName()
 {
 	if (IsValid(InventoryHUD))
 	{
-		return InventoryHUD->GetSelectedItemName();
+		return InventoryHUD->GetSelectedItemObjName();
 	}
 	return FString();
 }

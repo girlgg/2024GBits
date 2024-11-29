@@ -25,6 +25,7 @@ void AFirstPersonPlayerBase::StartGame()
 {
 	UGameplayFunctinos::UpdateInputMappingContext(GetWorld(), FirstPersonInputMapping);
 	CameraManager->StartGame();
+	ChangeToFirstPerson();
 }
 
 void AFirstPersonPlayerBase::BeginPlay()
@@ -120,6 +121,7 @@ void AFirstPersonPlayerBase::Navigate(const FInputActionValue& Value)
 void AFirstPersonPlayerBase::BePause()
 {
 	bIsPause = true;
+	InteractionManager->bPause = true;
 	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
 		GM->PauseGame();
@@ -129,6 +131,7 @@ void AFirstPersonPlayerBase::BePause()
 void AFirstPersonPlayerBase::OutPause()
 {
 	bIsPause = false;
+	InteractionManager->bPause = false;
 	if (ALevelGameModeBase* GM = Cast<ALevelGameModeBase>(UGameplayStatics::GetGameMode(GetWorld())))
 	{
 		GM->ContinueGame();

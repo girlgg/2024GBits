@@ -46,7 +46,7 @@ protected:
 	void MakeSay();
 
 	void DoorInteraction();
-	
+
 	void IntoDream(float InDreamTime);
 	void OutDream();
 
@@ -89,4 +89,5 @@ private:
 
 public:
 	bool bUseMouseLocation{false};
+	bool bPause{false};
 };

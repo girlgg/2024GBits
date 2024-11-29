@@ -40,12 +40,14 @@ void ALevelGameModeBase::OutDream()
 
 void ALevelGameModeBase::WinGame()
 {
+	// 胜利结算
+	UGameplayFunctinos::SetNextLevelName(GetWorld(), NextLevelName);
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("WinGame"));
 }
 
 void ALevelGameModeBase::LoseGame()
 {
-	const FName NextLevelName = "GameOverLevel";
-	UGameplayStatics::OpenLevel(this, NextLevelName);
+	UGameplayStatics::OpenLevel(this, TEXT("GameOverLevel"));
 }
 
 void ALevelGameModeBase::ReduceTime(float InTime)
@@ -57,13 +59,19 @@ void ALevelGameModeBase::ReduceTime(float InTime)
 void ALevelGameModeBase::PauseGame()
 {
 	bIsPause = true;
-	CountdownWidget->SetPause(true);
+	if (CountdownWidget)
+	{
+		CountdownWidget->SetPause(true);
+	}
 }
 
 void ALevelGameModeBase::ContinueGame()
 {
 	bIsPause = false;
-	CountdownWidget->SetPause(bInDream);
+	if (CountdownWidget)
+	{
+		CountdownWidget->SetPause(bInDream);
+	}
 }
 
 const FRoomConfig& ALevelGameModeBase::GetCurrentRoomPos(const FVector& PlayerPos) const
@@ -139,28 +147,23 @@ void ALevelGameModeBase::Tick(float DeltaSeconds)
 
 void ALevelGameModeBase::ShowLevelTitle()
 {
-	float DelayStartTime = ShowTitle(LevelName, SubtitlesBeforeStartGame);
+	float DelayStartTime = ShowTitle(LevelName, SubtitlesBeforeStartGame, SubtitlesBeforeStartGame.Num() > 0) + .1f;
 
+	FTimerHandle StartGameTimerHandle;
 	if (!SubtitlesBeforeStartGame.IsEmpty())
 	{
 		for (auto& Text : SubtitlesBeforeStartGame)
 		{
 			DelayStartTime += Text.SubtitleDelay;
 		}
-
-		FTimerHandle StartGameTimerHandle;
-		GetWorldTimerManager().SetTimer(
-			StartGameTimerHandle,
-			this,
-			&ThisClass::StartGame,
-			DelayStartTime,
-			false
-		);
 	}
-	else
-	{
-		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::StartGame);
-	}
+	GetWorldTimerManager().SetTimer(
+		StartGameTimerHandle,
+		this,
+		&ThisClass::StartGame,
+		DelayStartTime,
+		false
+	);
 }
 
 float ALevelGameModeBase::ShowTitle(const FString& InText, const TArray<FSubtitleSetting>& TextArr, bool bInPause)
@@ -175,7 +178,7 @@ float ALevelGameModeBase::ShowTitle(const FString& InText, const TArray<FSubtitl
 		StartGameWidget = nullptr;
 	}
 	ArrToShow = TextArr;
-	if (StartGameWidgetClass)
+	if (StartGameWidgetClass && ArrToShow.Num() > 0)
 	{
 		StartGameWidget = CreateWidget<UStartGameHUDBase>(GetWorld(), StartGameWidgetClass);
 		if (StartGameWidget)

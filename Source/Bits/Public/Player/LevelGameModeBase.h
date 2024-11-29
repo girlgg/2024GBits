@@ -142,6 +142,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
 	float DreamMaxTime{1800.f};
 
+	UPROPERTY(EditDefaultsOnly, Category = "Level Config")
+	FString NextLevelName;
+
 	/* 当前已经获取到的秒数 */
 	UPROPERTY(BlueprintReadOnly)
 	float CurrentSecondsCount{0.f};
